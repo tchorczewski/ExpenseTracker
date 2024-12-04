@@ -1,8 +1,9 @@
 from datetime import datetime
+import operator
 
 
 class Expense:
-    def __init__(self, amount, category, date, description):
+    def __init__(self, amount=0, category='Bills', date=datetime.now(), description='Nan'):
         self._amount = amount
         self._category = category
         self._date = date
@@ -51,42 +52,12 @@ class Expense:
             raise ValueError('Description has to be a text')
 
     def __repr__(self):
-        return f"Expense(amount={self._amount}, category='{self._category}', date='{self._date}', description='{self._description}')"
+        return f"Expense(amount={self.amount}, category='{self.category}', date='{self.date}', description='{self.description}')"
 
     def __str__(self):
-        return f"{self._date}: {self._description} (${self._amount}) under {self._category}"
+        return f"{self.date}: {self.description} (${self.amount}) category {self.category}"
 
-    def __lt__(self, other):
-        if self._class_check(other):
-            return self.amount < other.amount
-        else:
-            raise ValueError('Comparison must occur between objects of Expense class')
-
-    def __gt__(self, other):
-        if self._class_check(other):
-            return self.amount > other.amount
-        else:
-            raise ValueError('Comparison must occur between objects of Expense class')
-
-    def __eq__(self, other):
-        if self._class_check(other):
-            return self.amount == other.amount
-        else:
-            raise ValueError('Comparison must occur between objects of Expense class')
-
-    def __le__(self, other):
-        if self._class_check(other):
-            return self.amount <= other.amount
-        else:
-            raise ValueError('Comparison must occur between objects of Expense class')
-
-    def __ge__(self, other):
-        if self._class_check(other):
-            return self.amount >= other.amount
-        else:
-            raise ValueError('Comparison must occur between objects of Expense class')
-
-    def _class_check(self, item):
+    def _class_check(self, item: object) -> object:
         if isinstance(item, Expense):
             return True
         else:
@@ -105,3 +76,19 @@ class Expense:
             "date": self._date,
             "description": self._description,
         }
+
+    def compare_amounts(self, relate, other):
+        ops = {'>': operator.gt,
+               '<': operator.lt,
+               '>=': operator.ge,
+               '<=': operator.le,
+               '==': operator.eq,
+               '!=': operator.ne}
+        try:
+            self._class_check(other)
+            if relate in ops:
+                return ops[relate](self.amount, other.amount)
+            else:
+                raise ValueError(f"Unsupported operator '{relate}'. Supported operators are: {', '.join(ops.keys())}")
+        except ValueError:
+            raise ValueError("The comparison must be between objects of Expense class")
