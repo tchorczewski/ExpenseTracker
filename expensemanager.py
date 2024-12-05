@@ -1,6 +1,7 @@
 import json
 from expense import Expense
 
+
 class ExpenseManager:
     def __init__(self, expenses=None):
         if expenses is None:
@@ -10,6 +11,7 @@ class ExpenseManager:
     @property
     def expenses(self):
         return self._expenses
+
     @expenses.setter
     def expenses(self, expenses):
         self._expenses = expenses
