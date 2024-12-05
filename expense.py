@@ -1,6 +1,6 @@
 from datetime import datetime
 import operator
-
+import uuid
 
 class Expense:
     def __init__(self, amount=0, category='Bills', date=datetime.now(), description='Nan'):
@@ -70,12 +70,13 @@ class Expense:
             raise ValueError('Date must be in the format YYYY-MM-DD')
 
     def to_dict(self):
-        return {
+        id = str(uuid.uuid4())
+        return {id:{
             "amount": self._amount,
             "category": self._category,
-            "date": self._date,
+            "date": str(self._date),
             "description": self._description,
-        }
+        }}
 
     def compare_amounts(self, relate, other):
         ops = {'>': operator.gt,

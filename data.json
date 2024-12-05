@@ -1,0 +1,38 @@
+{
+    "1a819e2e-2ee1-4ec7-8c90-12fa7cb410c1": {
+        "amount": 1250,
+        "category": "Electricity",
+        "date": "2024-12-05 14:58:57.211443",
+        "description": "Nan"
+    },
+    "d36e35d2-921d-4326-93d1-2ef4f4f38ed6": {
+        "amount": 1250,
+        "category": "Electricity",
+        "date": "2024-12-05 15:13:48.379739",
+        "description": "Nan"
+    },
+    "6de3e7e7-fcab-40ea-9422-735c9a6954b0": {
+        "amount": 1250,
+        "category": "Electricity",
+        "date": "2024-12-05 15:13:52.604044",
+        "description": "Nan"
+    },
+    "27629aad-2cab-4276-a7b0-343a9299218a": {
+        "amount": 1250,
+        "category": "Electricity",
+        "date": "2024-12-05 15:20:02.632771",
+        "description": "Nan"
+    },
+    "9e4e34f6-5dd6-42a0-99a7-d4ee2eb56588": {
+        "amount": 1250,
+        "category": "Electricity",
+        "date": "2024-12-05 15:20:17.187024",
+        "description": "Nan"
+    },
+    "b5c89ede-7fe1-469c-ac6b-717cfb4cd5c0": {
+        "amount": "450",
+        "category": "FUn",
+        "date": "2024-11-05",
+        "description": ""
+    }
+}

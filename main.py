@@ -1,13 +1,19 @@
 from expense import Expense
-
+from expensemanager import ExpenseManager
+from menu import Menu
+'''
 r1 = Expense()
 
-r1.amount = 150
+r1.amount = 1250
 r1.date = '2024-05-06'
 r1.category = 'Electricity'
 
-print(r1)
+j = ExpenseManager()
 
-r2 = Expense(220)
+j.save_data(r1)
 
-print(Expense.compare_amounts(r1, '^', r2))
+data = [j.load_data()]
+'''
+if __name__ == '__main__':
+    menu = Menu()
+    menu.main_menu()
