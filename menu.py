@@ -1,14 +1,29 @@
 from expensemanager import ExpenseManager
 from expense import Expense
+from analysis import Analysis
 
 class Menu:
+    def __init__(self):
+        self._em = ExpenseManager()
+        self._expenses = self._em.load_data()
+
+    @property
+    def expenses(self):
+        return self._expenses
+    @expenses.setter
+    def expenses(self, data):
+        if isinstance(data, dict):
+            self._expenses = data
+        else:
+            raise ValueError('Incorrect passed, should be dict')
+
     def main_menu(self):
         while True:
             print("\n--- Expense Tracking System ---")
             print("1. Add Expense")
             print("2. Display Expenses")
             print("3. Remove Expense")
-            print("4. Sum Expenses")
+            print("4. Perform Analysis")
             print("5. Exit")
 
             # Get user choice
@@ -19,19 +34,25 @@ class Menu:
                 category = input("Specify Category: ")
                 date = input("Enter date of expense: ")
                 description = input("Enter description: ")
-                em = ExpenseManager()
                 expense = Expense(amount,category,date,description)
-                em.save_data(expense)
+                self._em.save_data(expense)
 
             elif choice == '2':
-                em = ExpenseManager()
-                print(em.load_data().values())
+                self.expenses = self._em.load_data()
+                print(list(self.expenses.values()))
 
             elif choice == '3':
-               pass
+                choice = input('Pass ID of item u wish to remove: ')
+                if choice in self.expenses:
+                    self.expenses.pop(choice)
+                    self._em.save_data(self.expenses)
+                    self.expenses = self._em.load_data()
+                else:
+                    print(f'Expense with ID: {choice} not found in DB, check and try again')
 
             elif choice == '4':
-                pass
+                an = Analysis(list(self.expenses.values()))
+                print(an.sum())
 
             elif choice == '5':
                 print("Exiting the system. Have a great day!")

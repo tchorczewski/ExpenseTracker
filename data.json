@@ -1,11 +1,5 @@
 {
-    "1a819e2e-2ee1-4ec7-8c90-12fa7cb410c1": {
-        "amount": 1250,
-        "category": "Electricity",
-        "date": "2024-12-05 14:58:57.211443",
-        "description": "Nan"
-    },
-    "d36e35d2-921d-4326-93d1-2ef4f4f38ed6": {
+    "d36e35d2-921d-4326-93d1-2ef4f4f38ed61": {
         "amount": 1250,
         "category": "Electricity",
         "date": "2024-12-05 15:13:48.379739",
@@ -34,5 +28,17 @@
         "category": "FUn",
         "date": "2024-11-05",
         "description": ""
+    },
+    "2ba9413a-e239-445b-8fa0-67b03a896eb8": {
+        "amount": "456.90",
+        "category": "DEBUG",
+        "date": "",
+        "description": "DEBUG"
+    },
+    "061287b3-bfef-4b92-ba66-8d76332a267d": {
+        "amount": "873.30",
+        "category": "DEBUG",
+        "date": "",
+        "description": "DEBUG"
     }
 }

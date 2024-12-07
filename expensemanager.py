@@ -34,8 +34,15 @@ class ExpenseManager:
         Will return True if done successfully
         '''
         existing_data = self.load_data()
-        existing_data.update(Expense.to_dict(data))
+        new_data = data
+        if len(new_data) > 1:
+            existing_data = dict()
+            for item, value in new_data.items():
+                existing_data.update({item: value})
+        else:
+            existing_data.update(Expense.to_dict(data))
         try:
+            print(existing_data)
             with open('data.json', 'w') as file:
                 json.dump(existing_data, file, indent=4)
             return True

@@ -36,9 +36,12 @@ class Expense:
         return self._date
 
     @date.setter
-    def date(self, date):
-        if self._validate_date(date):
-            self._date = date
+    def date(self, data):
+        if data == '':
+            self._date = datetime.now()
+        else:
+            if self._validate_date(data):
+                self._date = data
 
     @property
     def description(self):
@@ -72,10 +75,10 @@ class Expense:
     def to_dict(self):
         id = str(uuid.uuid4())
         return {id:{
-            "amount": self._amount,
-            "category": self._category,
-            "date": str(self._date),
-            "description": self._description,
+            "amount": self.amount,
+            "category": self.category,
+            "date": str(self.date),
+            "description": self.description,
         }}
 
     def compare_amounts(self, relate, other):
@@ -93,3 +96,6 @@ class Expense:
                 raise ValueError(f"Unsupported operator '{relate}'. Supported operators are: {', '.join(ops.keys())}")
         except ValueError:
             raise ValueError("The comparison must be between objects of Expense class")
+
+    def __len__(self):
+        return 1
