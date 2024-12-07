@@ -36,7 +36,7 @@ class Menu:
                 date = input("Enter date of expense: ")
                 description = input("Enter description: ")
                 if date == '':
-                    date = datetime.now().replace(microsecond=0)
+                    date = datetime.now().replace(microsecond=0,second=0,minute=0,hour=0)
                 expense = Expense(amount,category,date,description)
                 self._em.save_data(expense)
 
