@@ -2,25 +2,25 @@
     "d36e35d2-921d-4326-93d1-2ef4f4f38ed61": {
         "amount": 1250,
         "category": "Electricity",
-        "date": "2024-12-05 15:13:48.379739",
+        "date": "2024-12-05",
         "description": "Nan"
     },
     "6de3e7e7-fcab-40ea-9422-735c9a6954b0": {
         "amount": 1250,
         "category": "Electricity",
-        "date": "2024-12-05 15:13:52.604044",
+        "date": "2024-12-05",
         "description": "Nan"
     },
     "27629aad-2cab-4276-a7b0-343a9299218a": {
         "amount": 1250,
         "category": "Electricity",
-        "date": "2024-12-05 15:20:02.632771",
+        "date": "2024-12-05",
         "description": "Nan"
     },
     "9e4e34f6-5dd6-42a0-99a7-d4ee2eb56588": {
         "amount": 1250,
         "category": "Electricity",
-        "date": "2024-12-05 15:20:17.187024",
+        "date": "2024-12-05",
         "description": "Nan"
     },
     "b5c89ede-7fe1-469c-ac6b-717cfb4cd5c0": {
@@ -32,13 +32,25 @@
     "2ba9413a-e239-445b-8fa0-67b03a896eb8": {
         "amount": "456.90",
         "category": "DEBUG",
-        "date": "",
+        "date": "2024-11-05",
         "description": "DEBUG"
     },
     "061287b3-bfef-4b92-ba66-8d76332a267d": {
         "amount": "873.30",
         "category": "DEBUG",
-        "date": "",
+        "date": "2024-11-05",
         "description": "DEBUG"
+    },
+    "7afb5297-7bc1-48bf-8a68-5d0f73016c2f": {
+        "amount": "7716",
+        "category": "DEBUG",
+        "date": "2024-12-07",
+        "description": "DEBUG"
+    },
+    "8b28c60a-2516-423a-8dce-afbf370a4628": {
+        "amount": "243",
+        "category": "NAN",
+        "date": "2024-11-20",
+        "description": "NAN"
     }
 }

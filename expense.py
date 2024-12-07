@@ -2,8 +2,9 @@ from datetime import datetime
 import operator
 import uuid
 
+
 class Expense:
-    def __init__(self, amount=0, category='Bills', date=datetime.now(), description='Nan'):
+    def __init__(self, amount=0, category='Bills', date=datetime.now().replace(microsecond=0), description='Nan'):
         self._amount = amount
         self._category = category
         self._date = date
@@ -37,8 +38,8 @@ class Expense:
 
     @date.setter
     def date(self, data):
-        if data == '':
-            self._date = datetime.now()
+        if data == '' and self._date == '':
+            self._date = datetime.now().replace(microsecond=0)
         else:
             if self._validate_date(data):
                 self._date = data
@@ -74,7 +75,7 @@ class Expense:
 
     def to_dict(self):
         id = str(uuid.uuid4())
-        return {id:{
+        return {id: {
             "amount": self.amount,
             "category": self.category,
             "date": str(self.date),

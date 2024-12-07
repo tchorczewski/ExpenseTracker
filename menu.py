@@ -1,6 +1,7 @@
 from expensemanager import ExpenseManager
 from expense import Expense
 from analysis import Analysis
+from datetime import datetime
 
 class Menu:
     def __init__(self):
@@ -34,6 +35,8 @@ class Menu:
                 category = input("Specify Category: ")
                 date = input("Enter date of expense: ")
                 description = input("Enter description: ")
+                if date == '':
+                    date = datetime.now().replace(microsecond=0)
                 expense = Expense(amount,category,date,description)
                 self._em.save_data(expense)
 
@@ -52,7 +55,9 @@ class Menu:
 
             elif choice == '4':
                 an = Analysis(list(self.expenses.values()))
-                print(an.sum())
+
+                print(f'Total expenses: {an.sum()}')
+                print(f'Expenses this month: {an.sum_month()}')
 
             elif choice == '5':
                 print("Exiting the system. Have a great day!")

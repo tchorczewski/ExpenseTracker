@@ -19,7 +19,6 @@ class ExpenseManager:
     def load_data(self) -> dict:
         '''
         Loads data from pseudo db in json file
-        Returns data in python dict form
         '''
         try:
             with open('data.json', 'r') as file:
@@ -31,7 +30,9 @@ class ExpenseManager:
     def save_data(self, data) -> bool:
         '''
         Saves data from current session to pseudo db in json file
+        Checks if we need to perform a full save (after data removal) or a partial one (after adding new entry)
         Will return True if done successfully
+        The app is Naive it assumes the db file already exists.
         '''
         existing_data = self.load_data()
         new_data = data
@@ -42,7 +43,6 @@ class ExpenseManager:
         else:
             existing_data.update(Expense.to_dict(data))
         try:
-            print(existing_data)
             with open('data.json', 'w') as file:
                 json.dump(existing_data, file, indent=4)
             return True
