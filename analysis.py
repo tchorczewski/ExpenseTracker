@@ -6,14 +6,24 @@ class Analysis:
             items = []
         self._items = items
 
-    def sum(self):
-        if self._items == []:
+    def total_sum(self):
+        if not self._items:
             print('No values to sum, please fill the data')
         else:
             return sum(float(item['amount']) for item in self._items)
 
-    def sum_month(self):
-        current_month = datetime.now().month
-        current_month_expenses = [float(item['amount']) for item in self._items if datetime.strptime(item['date'], '%Y-%m-%d').month == current_month]
-        return sum(current_month_expenses)
+    def sum_month(self, month):
+        if isinstance(month,int):
+            current_month_expenses = [float(item['amount']) for item in self._items if int(datetime.strptime(item['date'], '%Y-%m-%d').month) == month]
+            return sum(current_month_expenses)
+        else:
+            print('Inserted incorrect value,please try again')
+
+    def sum_year(self, year):
+        if isinstance(year, int) and year <= int(datetime.now().year):
+            year_expenses = [float(item['amount']) for item in self._items if int(datetime.strptime(item['date'],
+                                                                                                format('%Y-%m-%d')).year) == year]
+            return sum(year_expenses)
+        else:
+            print('Inserted incorrect value,please try again')
 

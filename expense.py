@@ -4,10 +4,13 @@ import uuid
 
 
 class Expense:
-    def __init__(self, amount=0, category='Bills', date=datetime.now().replace(microsecond=0, second=0,minute=0,hour=0), description='Nan'):
+    def __init__(self, amount=0, category='Bills', date=datetime.now().date(), description='Nan'):
         self._amount = amount
         self._category = category
-        self._date = date
+        if date == '':
+            self._date = datetime.now().date()
+        else:
+            self._date = date
         self._description = description
 
     @property
@@ -39,7 +42,7 @@ class Expense:
     @date.setter
     def date(self, data):
         if data == '' and self._date == '':
-            self._date = datetime.now().replace(microsecond=0,second=0,minute=0,hour=0)
+            self._date = datetime.now().date()
         else:
             if self._validate_date(data):
                 self._date = data
