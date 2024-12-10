@@ -1,14 +1,16 @@
-from expensemanager import ExpenseManager
-from expense import Expense
-from analysis import Analysis
+from expenses.expensemanager import ExpenseManager
+from expenses.expense import Expense
+from stats.analysis import Analysis
 from datetime import datetime
-from plotting import Plotting
+from stats.plotting import Plotting
 
 
 class Menu:
     def __init__(self):
         self._em = ExpenseManager()
         self._expenses = self._em.load_data()
+        self.an = Analysis(list(self.expenses.values()))
+        self.plt = Plotting()
 
     @property
     def expenses(self):
@@ -41,7 +43,6 @@ class Menu:
                 self._em.partial_save(expense)
 
             elif choice == '2':
-                self.expenses = self._em.load_data()
                 print(list(self.expenses.values()))
 
             elif choice == '3':
@@ -60,8 +61,6 @@ class Menu:
 
 
     def analysis_menu(self):
-        an = Analysis(list(self.expenses.values()))
-        plt = Plotting()
         while True:
             print("\n--- Expense Analysis ---")
             print("1. Monthly Expenses")
@@ -75,17 +74,46 @@ class Menu:
 
             if choice == '1':
                 month = int(input('Which month do you want to see summary for? '))
-                print(f'Total expenses in {datetime.now().month}: {an.sum_month(month)}')
+                print(f'Total expenses in {datetime.now().month}: {self.an.sum_month(month)}')
             elif choice == '2':
-                print(f'All the expenses so far are totalling to {an.total_sum()}')
+                print(f'All the expenses so far are totalling to {self.an.total_sum()}')
             elif choice == '3':
                 year = int(input('Which year do you want to see summary for? '))
-                print(an.sum_year(year))
+                print(self.an.sum_year(year))
             elif choice == '4':
-                plt.expense_plot()
+                self.plotting_menu()
             elif choice == '5':
                 print("Going back to main menu...")
                 break
 
             else:
                 print("Invalid choice. Please enter a number from 1 to 5.")
+
+    def plotting_menu(self):
+        while True:
+            print('\n ---Data Plotting ---')
+            print('1. Yearly average spending')
+            print('2. Yearly spending distribution')
+            print('3. Monthly spending distribution')
+            print('4. ---PlaceHolder---')
+            print('5. Back to analysis menu')
+
+            choice = input('Choose an option(1-5): ')
+
+            if choice == '1':
+                self.plt.expense_plot()
+            if choice == '2':
+                year = input('Which year do you want to analyze? ')
+                self.plt.expense_month_year_distribution(year)
+            if choice == '3':
+                year = input('Which year do you want to analyze? ')
+                month = input('Which month do you wan to analyze ')
+                self.plt.monthly_expense(year,month)
+            if choice == '4':
+                pass
+            if choice == '5':
+                print('Going back to analysis menu ...')
+                break
+            else:
+                print('Invalid choice. Please enter a number from 1 to 5')
+

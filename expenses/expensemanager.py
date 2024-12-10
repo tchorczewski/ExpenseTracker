@@ -1,5 +1,6 @@
 import json
-from expense import Expense
+from expenses.expense import Expense
+import os
 
 
 class ExpenseManager:
@@ -7,6 +8,9 @@ class ExpenseManager:
         if expenses is None:
             expenses = []
         self._expenses = expenses
+        self._dir = os.path.dirname(os.path.abspath(__file__))
+        self._root_dir = os.path.dirname(self._dir)
+        self.data_file_path = os.path.join(self._root_dir, 'data.json')
 
     @property
     def expenses(self):
@@ -21,7 +25,7 @@ class ExpenseManager:
         Loads data from pseudo db in json file
         """
         try:
-            with open('data.json', 'r') as file:
+            with open(self.data_file_path, 'r') as file:
                 self.expenses = json.load(file)
                 return self._expenses
         except FileNotFoundError:
@@ -35,7 +39,7 @@ class ExpenseManager:
         existing_data = self.load_data()
         existing_data.update(Expense.to_dict(data))
         try:
-            with open('data.json', 'w') as file:
+            with open(self.data_file_path, 'w') as file:
                 json.dump(existing_data, file, indent=4)
         except FileNotFoundError:
             raise FileNotFoundError("File data.json not found")
@@ -46,14 +50,14 @@ class ExpenseManager:
             for item, value in data.items():
                 new_data.update({item: value})
             try:
-                with open('data.json', 'w') as file:
+                with open(self.data_file_path, 'w') as file:
                     json.dump(new_data, file, indent=4)
             except FileNotFoundError:
                 raise FileNotFoundError("DB file not found")
         else:
             raise ValueError(f"Incorrect data format passed to full_save method, passed format is {type(data)}")
 
-    def remove_record(self,choice):
+    def remove_record(self, choice):
         """
         Takes users id of choice and attempts to remove a record from db.
         :param choice: The selection of which record to delete
@@ -67,4 +71,3 @@ class ExpenseManager:
                 return self.load_data()
             else:
                 print(f'Expense with ID: {choice} not found in DB, check and try again')
-

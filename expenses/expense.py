@@ -1,6 +1,7 @@
 from datetime import datetime
 import operator
 import uuid
+from utils.validation import Validation
 
 
 class Expense:
@@ -44,7 +45,7 @@ class Expense:
         if data == '' and self._date == '':
             self._date = datetime.now().date()
         else:
-            if self._validate_date(data):
+            if Validation.validate_date(data):
                 self._date = data
 
     @property
@@ -64,26 +65,20 @@ class Expense:
     def __str__(self):
         return f"{self.date}: {self.description} (${self.amount}) category {self.category}"
 
-    def _class_check(self, item: object) -> object:
-        if isinstance(item, Expense):
-            return True
-        else:
-            raise ValueError('Comparison must occur between objects of Expense class')
-
-    def _validate_date(self, date):
-        try:
-            datetime.strptime(date, '%Y-%m-%d')
-        except ValueError:
-            raise ValueError('Date must be in the format YYYY-MM-DD')
-
     def to_dict(self):
-        id = str(uuid.uuid4())
-        return {id: {
+        uid = str(uuid.uuid4())
+        return {uid: {
             "amount": self.amount,
             "category": self.category,
             "date": str(self.date),
             "description": self.description,
         }}
+
+    def _is_object(self, item: object) -> object:
+        if isinstance(item, type):
+            return True
+        else:
+            raise ValueError('Comparison must occur between objects of Expense class')
 
     def compare_amounts(self, relate, other):
         ops = {'>': operator.gt,
@@ -93,7 +88,7 @@ class Expense:
                '==': operator.eq,
                '!=': operator.ne}
         try:
-            self._class_check(other)
+            self._is_object(other)
             if relate in ops:
                 return ops[relate](self.amount, other.amount)
             else:

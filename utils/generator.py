@@ -1,8 +1,8 @@
 import random
 from datetime import datetime,timedelta
 
-from expense import Expense
-from expensemanager import ExpenseManager
+from expenses.expense import Expense
+from expenses.expensemanager import ExpenseManager
 
 categories = ["Food & Groceries", "Transportation", "Housing", "Entertainment", "Misc"]
 em = ExpenseManager()

@@ -1,6 +1,4 @@
-from expense import Expense
-from expensemanager import ExpenseManager
-from menu import Menu
+from ui.menu import Menu
 
 
 if __name__ == '__main__':
