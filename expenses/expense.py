@@ -85,23 +85,3 @@ class Expense:
             return True
         else:
             raise ValueError("Comparison must occur between objects of Expense class")
-
-    def compare_amounts(self, relate, other):
-        ops = {
-            ">": operator.gt,
-            "<": operator.lt,
-            ">=": operator.ge,
-            "<=": operator.le,
-            "==": operator.eq,
-            "!=": operator.ne,
-        }
-        try:
-            self._is_object(other)
-            if relate in ops:
-                return ops[relate](self.amount, other.amount)
-            else:
-                raise ValueError(
-                    f"Unsupported operator '{relate}'. Supported operators are: {', '.join(ops.keys())}"
-                )
-        except ValueError:
-            raise ValueError("The comparison must be between objects of Expense class")
