@@ -11,9 +11,11 @@ def insert_expense(name, amount, description, date):
             with connection.cursor() as cursor:
                 cursor.execute(query, (name, amount, description, date))
                 connection.commit()
-                print("Inserted successfully")
+                print("\nInserted successfully")
     except Exception as e:
         print(f"Error inserting expense: {e}")
+        if connection:
+            connection.rollback()
     finally:
         if connection:
             connection.close()
@@ -46,6 +48,8 @@ def delete_expense(record_id):
                 print(f"Expense with ID {record_id} has been deleted")
     except Exception as e:
         print(f"Failed to delete epxense {e}")
+        if connection:
+            connection.rollback()
     finally:
         if connection:
             connection.close()

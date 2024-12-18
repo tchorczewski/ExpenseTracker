@@ -13,4 +13,4 @@ class DatabaseHandler:
             return self.conn
         except Exception as e:
             print(f"Error connecting to database: {e}")
-            raise
+            return None
