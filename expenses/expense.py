@@ -1,16 +1,18 @@
 from datetime import datetime
-import operator
-import uuid
-from utils.validation import Validation
+from utils.validation import validate_date
 
 
 class Expense:
     def __init__(
-        self, amount=0, category="Bills", date=datetime.now().date(), description="Nan"
+        self,
+        amount: float = 0,
+        category: str = "Bills",
+        date: str = None,
+        description: str = "Nan",
     ):
-        self._amount = amount
+        self.amount = amount
         self._category = category
-        if date == "":
+        if not date:
             self._date = datetime.now().date()
         else:
             self._date = date
@@ -47,7 +49,7 @@ class Expense:
         if data == "" and self._date == "":
             self._date = datetime.now().date()
         else:
-            if Validation.validate_date(data):
+            if validate_date(data):
                 self._date = data
 
     @property
@@ -62,7 +64,7 @@ class Expense:
             raise ValueError("Description has to be a text")
 
     def __repr__(self):
-        return f"Expense(amount={self.amount}, category='{self.category}', date='{self.date}', description='{self.description}')"
+        return f"Expense(category='{self.category}', amount={self.amount}, date='{self.date}', description='{self.description}')"
 
     def __str__(self):
         return (
@@ -70,18 +72,13 @@ class Expense:
         )
 
     def to_dict(self):
-        uid = str(uuid.uuid4())
         return {
-            uid: {
-                "amount": self.amount,
-                "category": self.category,
-                "date": str(self.date),
-                "description": self.description,
-            }
+            "amount": self.amount,
+            "category": self.category,
+            "date": str(self.date),
+            "description": self.description,
         }
 
-    def _is_object(self, item: object) -> object:
-        if isinstance(item, type):
-            return True
-        else:
-            raise ValueError("Comparison must occur between objects of Expense class")
+    @classmethod
+    def from_db(cls, db_row):
+        return cls(*db_row)

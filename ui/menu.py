@@ -1,27 +1,15 @@
-from expenses.expensemanager import ExpenseManager
 from expenses.expense import Expense
 from stats.analysis import Analysis
 from datetime import datetime
 from stats.plotting import Plotting
+from db.db_operations import fetch_expense, delete_expense, insert_expense
+from utils.validation import get_amount_input, beautify_data, category_input, date_input
 
 
 class Menu:
     def __init__(self):
-        self._em = ExpenseManager()
-        self._expenses = self._em.load_data()
-        self.an = Analysis(list(self.expenses.values()))
+        # self.an = Analysis(list(self.expenses.values()))
         self.plt = Plotting()
-
-    @property
-    def expenses(self):
-        return self._expenses
-
-    @expenses.setter
-    def expenses(self, data):
-        if isinstance(data, dict):
-            self._expenses = data
-        else:
-            raise ValueError("Incorrect passed, should be dict")
 
     def main_menu(self):
         while True:
@@ -36,22 +24,25 @@ class Menu:
             choice = input("Choose an option (1-5): ")
 
             if choice == "1":
-                amount = input("Enter amount: ")
-                category = input("Specify Category: ")
-                date = input("Enter date of expense: ")
+                amount = get_amount_input()
+                category = category_input()
+                date = date_input()
                 description = input("Enter description: ")
                 expense = Expense(amount, category, date, description)
-                self._em.partial_save(expense)
+                insert_expense(
+                    expense.category, expense.amount, expense.description, expense.date
+                )
 
             elif choice == "2":
-                print(list(self.expenses.values()))
+                print(list(map(beautify_data, fetch_expense())))
 
             elif choice == "3":
                 choice = input("Pass ID of item u wish to remove: ")
-                self.expenses = self._em.remove_record(choice)
+                delete_expense(choice)
 
             elif choice == "4":
-                self.analysis_menu()
+                an = Analysis(list(map(beautify_data, fetch_expense())))
+                self.analysis_menu(an)
 
             elif choice == "5":
                 print("Exiting the system. Have a great day!")
@@ -60,7 +51,7 @@ class Menu:
             else:
                 print("Invalid choice. Please enter a number from 1 to 5.")
 
-    def analysis_menu(self):
+    def analysis_menu(self, analysis: Analysis):
         while True:
             print("\n--- Expense Analysis ---")
             print("1. Monthly Expenses")
@@ -74,13 +65,15 @@ class Menu:
             if choice == "1":
                 month = int(input("Which month do you want to see summary for? "))
                 print(
-                    f"Total expenses in {datetime.now().month}: {self.an.sum_month(month)}"
+                    f"Total expenses in {datetime.now().month}: {analysis.sum_month(month)}"
                 )
             elif choice == "2":
-                print(f"All the expenses so far are totalling to {self.an.total_sum()}")
+                print(
+                    f"All the expenses so far are totalling to {analysis.total_sum()}"
+                )
             elif choice == "3":
                 year = int(input("Which year do you want to see summary for? "))
-                print(self.an.sum_year(year))
+                print(analysis.sum_year(year))
             elif choice == "4":
                 self.plotting_menu()
             elif choice == "5":
