@@ -1,9 +1,14 @@
 from expenses.expense import Expense
-from stats.analysis import Analysis
-from datetime import datetime
+from stats.analysis import sum_month, sum_year, total_sum
 from stats.plotting import Plotting
-from db.db_operations import fetch_expense, delete_expense, insert_expense
-from utils.validation import get_amount_input, beautify_data, category_input, date_input
+from db.db_operations import (
+    fetch_expense,
+    delete_expense,
+    insert_expense,
+    fetch_by_year,
+    fetch_by_month,
+)
+from utils.validation import *
 
 
 class Menu:
@@ -41,8 +46,7 @@ class Menu:
                 delete_expense(choice)
 
             elif choice == "4":
-                an = Analysis(list(map(beautify_data, fetch_expense())))
-                self.analysis_menu(an)
+                self.analysis_menu()
 
             elif choice == "5":
                 print("Exiting the system. Have a great day!")
@@ -51,7 +55,7 @@ class Menu:
             else:
                 print("Invalid choice. Please enter a number from 1 to 5.")
 
-    def analysis_menu(self, analysis: Analysis):
+    def analysis_menu(self):
         while True:
             print("\n--- Expense Analysis ---")
             print("1. Monthly Expenses")
@@ -63,17 +67,19 @@ class Menu:
             choice = input("Choose an option (1-5): ")
 
             if choice == "1":
-                month = int(input("Which month do you want to see summary for? "))
+                year = year_input()
+                month = month_input()
                 print(
-                    f"Total expenses in {datetime.now().month}: {analysis.sum_month(month)}"
+                    f"Total expenses in {month}: {sum_month(fetch_by_month(year, month))}"
                 )
             elif choice == "2":
-                print(
-                    f"All the expenses so far are totalling to {analysis.total_sum()}"
-                )
+                print(list(map(analyze_beautify, fetch_by_month(2024, 12))))
+                # print(
+                #    f"All the expenses so far are totalling to {analysis.total_sum()}"
+                # )
             elif choice == "3":
                 year = int(input("Which year do you want to see summary for? "))
-                print(analysis.sum_year(year))
+                # print(analysis.sum_year(year))
             elif choice == "4":
                 self.plotting_menu()
             elif choice == "5":

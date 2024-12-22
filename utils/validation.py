@@ -39,9 +39,32 @@ def get_amount_input() -> float:
 
 
 def beautify_data(data) -> tuple:
-    _, name, amount, description, date = data
-    cleaned_record = (name, float(amount), description, str(date))
-    return cleaned_record
+    try:
+        _, name, amount, description, date = data
+        cleaned_amount = float(amount)
+        cleaned_date = datetime.strptime(str(date), "%Y-%m-%d").date() if date else None
+        cleaned_record = (name, cleaned_amount, description, cleaned_date)
+        return cleaned_record
+    except ValueError as e:
+        print(f"Error converting data: {e}")
+        return ()
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return ()
+
+
+def analyze_beautify(data) -> tuple:
+    try:
+        amount, name = data
+        cleaned_amount = float(amount)
+        cleaned_record = (name, cleaned_amount)
+        return cleaned_record
+    except ValueError as e:
+        print(f"Error converting data: {e}")
+        return ()
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return ()
 
 
 def category_input() -> str:
