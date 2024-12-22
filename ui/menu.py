@@ -70,10 +70,11 @@ class Menu:
                 year = year_input()
                 month = month_input()
                 print(
-                    f"Total expenses in {month}: {sum_month(fetch_by_month(year, month))}"
+                    f"Total expenses in {month} of {year} is {sum_month(list(map(analyze_beautify,
+                                                                                 fetch_by_month(year, month))))}"
                 )
             elif choice == "2":
-                print(list(map(analyze_beautify, fetch_by_month(2024, 12))))
+                print("DUPA")
                 # print(
                 #    f"All the expenses so far are totalling to {analysis.total_sum()}"
                 # )

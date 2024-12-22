@@ -55,9 +55,9 @@ def beautify_data(data) -> tuple:
 
 def analyze_beautify(data) -> tuple:
     try:
-        amount, name = data
+        amount, category = data
         cleaned_amount = float(amount)
-        cleaned_record = (name, cleaned_amount)
+        cleaned_record = (cleaned_amount, category)
         return cleaned_record
     except ValueError as e:
         print(f"Error converting data: {e}")

@@ -8,16 +8,8 @@ def total_sum(self):
         return sum(float(amount) for _, amount, _, _ in self._items)
 
 
-def sum_month(month, data):
-    if isinstance(month, int):
-        current_month_expenses = [
-            float(amount)
-            for amount, date in self._items
-            if int(datetime.strptime(date, "%Y-%m-%d").month) == month
-        ]
-        return sum(current_month_expenses)
-    else:
-        print("Inserted incorrect value,please try again")
+def sum_month(data):
+    return sum(amount for amount, _ in data)
 
 
 def sum_year(year):
