@@ -39,11 +39,16 @@ def get_amount_input() -> float:
 
 
 def beautify_data(data) -> tuple:
+    """
+    Takes the data received from DB and adjusts it by, to make it more readable by humans.
+    :param data: Data received from DB.
+    :return: Tuple with data in order (category, amount, description, date)
+    """
     try:
-        _, name, amount, description, date = data
+        _, category, amount, description, date = data
         cleaned_amount = float(amount)
         cleaned_date = datetime.strptime(str(date), "%Y-%m-%d").date() if date else None
-        cleaned_record = (name, cleaned_amount, description, cleaned_date)
+        cleaned_record = (category, cleaned_amount, description, cleaned_date)
         return cleaned_record
     except ValueError as e:
         print(f"Error converting data: {e}")

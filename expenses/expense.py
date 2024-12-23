@@ -71,14 +71,6 @@ class Expense:
             f"{self.date}: {self.description} (${self.amount}) category {self.category}"
         )
 
-    def to_dict(self):
-        return {
-            "amount": self.amount,
-            "category": self.category,
-            "date": str(self.date),
-            "description": self.description,
-        }
-
     @classmethod
     def from_db(cls, db_row):
         return cls(*db_row)

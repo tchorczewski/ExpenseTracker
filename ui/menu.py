@@ -1,5 +1,5 @@
 from expenses.expense import Expense
-from stats.analysis import sum_month, sum_year, total_sum
+from stats.analysis import conditional_sum, total_sum
 from stats.plotting import Plotting
 from db.db_operations import (
     fetch_expense,
@@ -12,9 +12,6 @@ from utils.validation import *
 
 
 class Menu:
-    def __init__(self):
-        # self.an = Analysis(list(self.expenses.values()))
-        self.plt = Plotting()
 
     def main_menu(self):
         while True:
@@ -70,17 +67,18 @@ class Menu:
                 year = year_input()
                 month = month_input()
                 print(
-                    f"Total expenses in {month} of {year} is {sum_month(list(map(analyze_beautify,
+                    f"Total expenses in {month} of {year} is {conditional_sum(list(map(analyze_beautify,
                                                                                  fetch_by_month(year, month))))}"
                 )
             elif choice == "2":
-                print("DUPA")
-                # print(
-                #    f"All the expenses so far are totalling to {analysis.total_sum()}"
-                # )
+                print(
+                    f"Total recorded expenses: {total_sum(list(map(beautify_data,fetch_expense())))}"
+                )
             elif choice == "3":
-                year = int(input("Which year do you want to see summary for? "))
-                # print(analysis.sum_year(year))
+                year = year_input()
+                print(
+                    f"Total expenses in {year}: {conditional_sum(list(map(analyze_beautify, fetch_by_year(year))))}"
+                )
             elif choice == "4":
                 self.plotting_menu()
             elif choice == "5":
@@ -91,6 +89,7 @@ class Menu:
                 print("Invalid choice. Please enter a number from 1 to 5.")
 
     def plotting_menu(self):
+        self.plt = Plotting()
         while True:
             print("\n ---Data Plotting ---")
             print("1. Yearly average spending")
@@ -104,11 +103,11 @@ class Menu:
             if choice == "1":
                 self.plt.expense_plot()
             if choice == "2":
-                year = input("Which year do you want to analyze? ")
+                year = year_input()
                 self.plt.expense_month_year_distribution(year)
             if choice == "3":
-                year = input("Which year do you want to analyze? ")
-                month = input("Which month do you wan to analyze ")
+                year = year_input()
+                month = month_input()
                 self.plt.monthly_expense(year, month)
             if choice == "4":
                 pass
