@@ -1,4 +1,3 @@
-from expenses.expense import Expense
 from stats.analysis import conditional_sum, total_sum
 from stats.plotting import Plotting
 from db.db_operations import (
@@ -30,10 +29,7 @@ class Menu:
                 category = category_input()
                 date = date_input()
                 description = input("Enter description: ")
-                expense = Expense(amount, category, date, description)
-                insert_expense(
-                    expense.category, expense.amount, expense.description, expense.date
-                )
+                insert_expense(category, amount, description, date)
 
             elif choice == "2":
                 print(list(map(beautify_data, fetch_expense())))
