@@ -1,6 +1,5 @@
 import random
 from datetime import datetime, timedelta
-from db.db_operations import insert_expense
 
 categories = ["Food & Groceries", "Transportation", "Housing", "Entertainment", "Misc"]
 
@@ -14,4 +13,3 @@ for i in range(5000):
             days=random.randint(0, (datetime(2024, 12, 31) - datetime(2005, 1, 1)).days)
         )
     ).date()
-    insert_expense(category, amount, "", date)
