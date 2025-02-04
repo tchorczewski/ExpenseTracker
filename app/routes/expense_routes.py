@@ -1,8 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from pandas import describe_option
 from sqlalchemy.exc import IntegrityError, OperationalError
-
+from utils import validation
 from db.models import Users, Expenses
 from db import db
 
@@ -44,22 +43,17 @@ def get_users_expenses():
 @jwt_required()
 def add_expense():
     if request.method == "POST":
-        category = request.form["category"]
-        amount = float(request.form["amount"])
-        description = request.form.get("description", "")
-        date = request.form["date"]
-        user_id = get_jwt_identity()
+        data = request.form.to_dict()
+        data["amount"] = float(data.get("amount", "0"))
+        data["description"] = data.get("description", "None")
+        data["user_id"] = get_jwt_identity()
 
-        if not all([category, amount, date]):
-            return jsonify({"message": "Missing required fields"}), 400
+        is_valid, error_msg = validation.validate_expense(data)
+        if not is_valid:
+            return jsonify({"message": error_msg}), 400
 
-        expense = Expenses(
-            category=category,
-            amount=amount,
-            description=description,
-            date=date,
-            user_id=user_id,
-        )
+        expense = Expenses(**data)
+
         try:
             db.session.add(expense)
             db.session.commit()
@@ -72,7 +66,7 @@ def add_expense():
                     "user_id": expense.user_id,
                 }
             )
-            return jsonify(response), 201
+            return response, 201
         except IntegrityError:
             db.session.rollback()
             return jsonify({"message": "Database integrity error"}), 400

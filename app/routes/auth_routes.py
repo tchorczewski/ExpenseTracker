@@ -8,6 +8,9 @@ from flask_jwt_extended import (
 )
 from db.models import Users
 from db import db
+from sqlalchemy.exc import IntegrityError, OperationalError
+
+from utils.validation import is_valid_email, is_valid_password
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -38,9 +41,22 @@ def get_pwd(username, password):
 
 
 @auth_bp.route("/register", methods=["POST"])
-def user_create():
+def register():
     if request.method == "POST":
         password = request.form["password"]
+
+        if not is_valid_password(password):
+            return (
+                jsonify(
+                    {
+                        "message": "Password must be at least 8 characters long, contain a number and a letter"
+                    }
+                ),
+                400,
+            )
+        if not is_valid_email(request.form["e_mail"]):
+            return jsonify({"message": "Invalid email format"}), 400
+
         user = Users(
             username=request.form["username"],
             e_mail=request.form["e_mail"],
@@ -48,20 +64,31 @@ def user_create():
             last_name=request.form["last_name"],
             user_password=bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()),
         )
-        db.session.add(user)
-        db.session.commit()
-        return (
-            jsonify(
-                {
-                    "user_id": user.user_id,
-                    "username": user.username,
-                    "e_mail": user.e_mail,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                }
-            ),
-            201,
-        )
+
+        try:
+            db.session.add(user)
+            db.session.commit()
+            return (
+                jsonify(
+                    {
+                        "user_id": user.user_id,
+                        "username": user.username,
+                        "e_mail": user.e_mail,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                    }
+                ),
+                201,
+            )
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({"message": "Database integrity error"}), 400
+        except OperationalError:
+            db.session.rollback()
+            return jsonify({"message": "Database connection issue"}), 500
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": str(e)}), 500
 
 
 @auth_bp.route("/logout")
