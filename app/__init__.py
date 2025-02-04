@@ -23,7 +23,7 @@ def create_app():
     db.init_app(app)
 
     app.register_blueprint(expense_bp, url_prefix="/api")
-    app.register_blueprint(auth_bp, url_prefix="/")
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
     @app.after_request
     def refresh_expiring_jwt(response):
