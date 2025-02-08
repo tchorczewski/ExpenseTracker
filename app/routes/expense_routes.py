@@ -13,6 +13,8 @@ expense_bp = Blueprint("expenses", __name__)
 def get_users_expenses():
     user_id = get_jwt_identity()
     user = Users.query.filter_by(user_id=user_id).first()
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
     if user:
         expenses = (
             db.session.query(
@@ -23,7 +25,7 @@ def get_users_expenses():
             )
             .join(Users, Expenses.user_id == Users.user_id)
             .filter(Users.user_id == user.user_id)
-            .all()
+            .paginate(page=page, per_page=per_page, error_out=False)
         )
         expenses_list = [
             {
@@ -32,9 +34,16 @@ def get_users_expenses():
                 "description": expense[2],
                 "date": expense[3].strftime("%Y-%m-%d"),
             }
-            for expense in expenses
+            for expense in expenses.items
         ]
-        return jsonify(expenses_list), 200
+        response = {
+            "expenses": expenses_list,
+            "page": expenses.page,
+            "per_page": expenses.per_page,
+            "total": expenses.total,
+            "pages": expenses.pages,
+        }
+        return jsonify(response), 200
     else:
         return jsonify({"message": "User not found"}), 404
 
