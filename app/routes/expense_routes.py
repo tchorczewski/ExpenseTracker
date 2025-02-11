@@ -8,7 +8,7 @@ from db import db
 expense_bp = Blueprint("expenses", __name__)
 
 
-@expense_bp.route("/users_expenses", methods=["GET"])
+@expense_bp.route("/get_expenses", methods=["GET"])
 @jwt_required()
 def get_users_expenses():
     user_id = get_jwt_identity()
@@ -52,10 +52,11 @@ def get_users_expenses():
 @jwt_required()
 def add_expense():
     if request.method == "POST":
+        user = get_jwt_identity()
         data = request.form.to_dict()
         data["amount"] = float(data.get("amount", "0"))
         data["description"] = data.get("description", "None")
-        data["user_id"] = get_jwt_identity()
+        data["user_id"] = user
 
         is_valid, error_msg = validation.validate_expense(data)
         if not is_valid:

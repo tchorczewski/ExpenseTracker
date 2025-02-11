@@ -21,7 +21,8 @@ def create_app():
     app.permanent_session_lifetime = timedelta(days=1)
     jwt = JWTManager(app)
     db.init_app(app)
-
+    with app.app_context():
+        db.create_all()
     app.register_blueprint(expense_bp, url_prefix="/api")
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
