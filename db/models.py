@@ -72,6 +72,25 @@ class Budget(db.Model):
     )
 
 
+class Incomes(db.Model):
+    __tablename_ = "incomes"
+    income_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
+    category_id = db.Column(
+        db.Integer, db.ForeignKey("income_categories.category_id"), nullable=False
+    )
+    amount = db.Column(db.Numeric(12, 2), nullable=False)
+    income_date = db.Column(db.DateTime, nullable=False)
+    is_cyclical = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.now(timezone.utc)
+    )
+    updated_at = db.Column(db.DateTime)
+
+    user = db.relationship("Users", backref="incomes")
+    category = db.relationship("IncomeCategories", backref="incomes")
+
+
 class ExpenseCategories(db.Model):
     __tablename__ = "expense_categories"
     category_id = db.Column(db.Integer, primary_key=True)
@@ -88,3 +107,9 @@ class UserStatuses(db.Model):
     __tablename__ = "user_statuses"
     status_id = db.Column(db.Integer, primary_key=True)
     status_name = db.Column(db.String(100), nullable=False)
+
+
+class IncomeCategories(db.Model):
+    __tablename__ = "income_categories"
+    category_id = db.Column(db.Integer, primary_key=True)
+    category_name = db.Column(db.String(255))
