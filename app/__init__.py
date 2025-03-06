@@ -10,7 +10,6 @@ from flask_jwt_extended import (
 from db import db
 from .config import Config
 from datetime import timedelta, datetime
-
 from .routes.auth_routes import auth_bp
 from .routes.expense_routes import expense_bp
 

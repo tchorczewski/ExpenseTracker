@@ -48,7 +48,7 @@ class Users(db.Model):
 class Budget(db.Model):
     __tablename__ = "budgets"
     budget_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
     budget_month = db.Column(db.Integer, nullable=False)
     budget_year = db.Column(db.Integer, nullable=False)
     budget_amount = db.Column(db.Numeric(10, 2), nullable=False)
@@ -113,3 +113,9 @@ class IncomeCategories(db.Model):
     __tablename__ = "income_categories"
     category_id = db.Column(db.Integer, primary_key=True)
     category_name = db.Column(db.String(255))
+
+
+class BudgetStatuses(db.Model):
+    __tablename__ = "budget_statuses"
+    status_id = db.Column(db.Integer, primary_key=True)
+    status_name = db.Column(db.String(255))

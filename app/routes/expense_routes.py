@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy import select
 from utils import validation
 from db.models import Users, Expenses
 from db import db
@@ -16,32 +17,34 @@ def get_users_expenses():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
     if user:
-        expenses = (
-            db.session.query(
-                Expenses.category,
-                Expenses.amount,
-                Expenses.description,
-                Expenses.date,
-            )
+        stmt = (
+            select(Expenses)
             .join(Users, Expenses.user_id == Users.user_id)
             .filter(Users.user_id == user.user_id)
-            .paginate(page=page, per_page=per_page, error_out=False)
+            .limit(per_page)
+            .offset((page - 1) * per_page)
         )
+        expenses = db.session.execute(stmt).scalars().all()
+
         expenses_list = [
             {
-                "category": expense[0],
-                "amount": expense[1],
-                "description": expense[2],
-                "date": expense[3].strftime("%Y-%m-%d"),
+                "expense_id": expense.expense_id,
+                "category_id": expense.category_id,
+                "amount": expense.amount,
+                "description": expense.description,
+                "user_id": expense.user_id,
+                "expense_date": expense.expense_date.strftime("%Y-%m-%d"),
+                "created_at": expense.created_at.strftime("%Y-%m-%d"),
+                "updated_at": expense.updated_at,
             }
-            for expense in expenses.items
+            for expense in expenses
         ]
         response = {
             "expenses": expenses_list,
-            "page": expenses.page,
-            "per_page": expenses.per_page,
-            "total": expenses.total,
-            "pages": expenses.pages,
+            # "page": expenses.page,
+            # "per_page": expenses.per_page,
+            # "total": expenses.total,
+            # "pages": expenses.pages,
         }
         return jsonify(response), 200
     else:
@@ -53,6 +56,7 @@ def get_users_expenses():
 def add_expense():
     if request.method == "POST":
         user = get_jwt_identity()
+        print(user)
         data = request.form.to_dict()
         data["amount"] = float(data.get("amount", "0"))
         data["description"] = data.get("description", "None")
