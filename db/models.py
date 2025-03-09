@@ -1,4 +1,7 @@
 from datetime import datetime, timezone, date
+
+from sqlalchemy.orm import backref
+
 from . import db
 
 
@@ -16,9 +19,13 @@ class Expenses(db.Model):
         db.DateTime, nullable=False, default=datetime.now(timezone.utc)
     )
     updated_at = db.Column(db.DateTime)
+    budget_id = db.Column(
+        db.Integer, db.ForeignKey("budgets.budget_id"), nullable=False
+    )
 
     user = db.relationship("Users", backref="expenses")
     category = db.relationship("ExpenseCategories", backref="expenses")
+    budgets = db.relationship("Budgets", backref="expenses")
 
 
 class Users(db.Model):

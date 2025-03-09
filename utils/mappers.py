@@ -25,4 +25,5 @@ def expense_mapper(expense):
         "updated_at": (
             expense.updated_at.strftime("%Y-%m-%d") if expense.updated_at else None
         ),
+        "budget_id": expense.budget_id,
     }

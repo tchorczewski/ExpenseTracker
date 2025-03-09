@@ -3,9 +3,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy import select
 from utils import validation, helpers
+from utils.mappers import expense_mapper
 from db.models import Users, Expenses
 from db import db
 from utils.mappers import expense_mapper
+from datetime import datetime
 
 expense_bp = Blueprint("expenses", __name__)
 
@@ -15,7 +17,7 @@ expense_bp = Blueprint("expenses", __name__)
 def get_users_expenses():
     user_id = helpers.get_user_id_from_token()
     if not user_id:
-        return jsonify({"message": "Unauthorized"}), 404
+        return jsonify({"message": "Unauthorized"}), 401
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
     user = helpers.get_current_user(user_id)
@@ -46,31 +48,21 @@ def get_users_expenses():
 @jwt_required()
 def add_expense():
     if request.method == "POST":
-        user = get_jwt_identity()
-        print(user)
-        data = request.form.to_dict()
-        data["amount"] = float(data.get("amount", "0"))
-        data["description"] = data.get("description", "None")
-        data["user_id"] = user
-
+        user = helpers.get_user_id_from_token()
+        if not user:
+            return jsonify({"message": "Unauthorized"}), 401
+        raw_data = request.form.to_dict()
+        data, error_msg = helpers.prepare_expense_data(raw_data, user.user_id)
+        if error_msg:
+            return jsonify({"message": f"Something went wrong {error_msg}"}), 400
         is_valid, error_msg = validation.validate_expense(data)
         if not is_valid:
             return jsonify({"message": error_msg}), 400
-
         expense = Expenses(**data)
-
         try:
             db.session.add(expense)
             db.session.commit()
-            response = jsonify(
-                {
-                    "category": expense.category,
-                    "amount": expense.amount,
-                    "description": expense.description,
-                    "date": expense.date,
-                    "user_id": expense.user_id,
-                }
-            )
+            response = jsonify(expense_mapper(expense))
             return response, 201
         except IntegrityError:
             db.session.rollback()

@@ -43,12 +43,21 @@ def validate_expense(data) -> (bool, str):
     :param data: Data from a create_expense request
     :return: A boolean value if the validation is OK, additional error message to inform where the issue is
     """
-    required_fields = ["category", "amount", "date"]
+    required_fields = ["category_id", "amount", "expense_date, budget_id"]
     for field in required_fields:
         if field not in data or not data[field]:
             return False, f"Missing required field: {field}"
     if not isinstance(data["amount"], (int, float)) or data["amount"] <= 0:
         return False, "Incorrect value passed as amount"
-    if not is_valid_date(data["date"]):
+    if not is_valid_date(data["expense_date"]):
         return False, "Incorrect date format, should be YYYY-MM-DD"
+    if not is_valid_category(data["category_id"]):
+        return False, "Out of category scope for expenses please call the developer"
     return True, None
+
+
+def is_valid_category(cat_id):
+    return isinstance(cat_id, int) and cat_id in range(1, 6)
+
+def validate_budget(data) -> (bool, str):
+    pass
