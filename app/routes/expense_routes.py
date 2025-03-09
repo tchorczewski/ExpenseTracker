@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy import select
-from utils import validation
+from utils import validation, helpers
 from db.models import Users, Expenses
 from db import db
 
@@ -13,9 +13,9 @@ expense_bp = Blueprint("expenses", __name__)
 @jwt_required()
 def get_users_expenses():
     user_id = get_jwt_identity()
-    user = Users.query.filter_by(user_id=user_id).first()
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
+    user = helpers.get_current_user(user_id)
     if user:
         stmt = (
             select(Expenses)

@@ -45,7 +45,7 @@ class Users(db.Model):
     status_id = db.relationship("UserStatuses", backref="users")
 
 
-class Budget(db.Model):
+class Budgets(db.Model):
     __tablename__ = "budgets"
     budget_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
