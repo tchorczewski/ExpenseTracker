@@ -59,5 +59,6 @@ def validate_expense(data) -> (bool, str):
 def is_valid_category(cat_id):
     return isinstance(cat_id, int) and cat_id in range(1, 6)
 
+
 def validate_budget(data) -> (bool, str):
     pass

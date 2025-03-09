@@ -105,7 +105,7 @@ def create_budget():
     data = helpers.prepare_budget_data(raw_data, user.user_id)
     is_valid, error_msg = validate_budget(data)
     if not is_valid:
-        return jsonify({'message': f'Something went wrong {error_msg}'}), 400
+        return jsonify({"message": f"Something went wrong {error_msg}"}), 400
     budget = Budgets(**data)
     try:
         db.session.add(budget)
