@@ -11,6 +11,7 @@ from db import db
 from .config import Config
 from datetime import timedelta, datetime
 from .routes.auth_routes import auth_bp
+from .routes.budget_routes import budget_bp
 from .routes.expense_routes import expense_bp
 
 
@@ -22,8 +23,9 @@ def create_app():
     db.init_app(app)
     with app.app_context():
         db.create_all()
-    app.register_blueprint(expense_bp, url_prefix="/api")
+    app.register_blueprint(expense_bp, url_prefix="/api/expenses")
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(budget_bp, url_prefix="/api/budgets")
 
     @app.after_request
     def refresh_expiring_jwt(response):

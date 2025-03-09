@@ -1,4 +1,6 @@
 from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended.exceptions import NoAuthorizationError
+
 from db.models import Users
 from datetime import datetime
 
@@ -12,8 +14,11 @@ def get_current_user(user_id):
     return user
 
 
-def check_role(user):
-    pass
+def get_user_id_from_token():
+    try:
+        return get_jwt_identity()
+    except NoAuthorizationError:
+        return None
 
 
 def get_current_date():
