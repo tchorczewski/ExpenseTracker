@@ -1,13 +1,11 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy import select
 from utils import validation, helpers
-from utils.mappers import expense_mapper
 from db.models import Users, Expenses
 from db import db
 from utils.mappers import expense_mapper
-from datetime import datetime
 
 expense_bp = Blueprint("expenses", __name__)
 
@@ -52,7 +50,7 @@ def add_expense():
         if not user:
             return jsonify({"message": "Unauthorized"}), 401
         raw_data = request.form.to_dict()
-        data, error_msg = helpers.prepare_expense_data(raw_data, user.user_id)
+        data, error_msg = helpers.prepare_expense_data(raw_data, user)
         if error_msg:
             return jsonify({"message": f"Something went wrong {error_msg}"}), 400
         is_valid, error_msg = validation.validate_expense(data)

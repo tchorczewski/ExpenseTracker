@@ -102,6 +102,8 @@ def create_budget():
         return jsonify({"message": "Unauthorized"}), 401
     user = helpers.get_current_user(user_id)
     raw_data = request.form.to_dict()
+    raw_data["budget_month"] = int(raw_data["budget_month"])
+    raw_data["budget_year"] = int(raw_data["budget_year"])
     data = helpers.prepare_budget_data(raw_data, user.user_id)
     is_valid, error_msg = validate_budget(data)
     if not is_valid:

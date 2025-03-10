@@ -54,7 +54,7 @@ def get_budget_for_user(user_id, selected_date_str):
     try:
         result = db.session.execute(stmt).scalar_one_or_none()
         if not result:
-            return jsonify({"message": "No budget for selected period"}), 404
+            return None, "No budget for selected period"
         budget = budget_mapper(result)
         return budget, None
     except OperationalError:
@@ -63,22 +63,28 @@ def get_budget_for_user(user_id, selected_date_str):
         return None, f"Unexpected error {str(e)}"
 
 
-def prepare_expense_data(data, user_id):
+def prepare_expense_data(data, user_id) -> (object, str):
+    """
+
+    :param data: Dictionary form of data from request
+    :param user_id: User_id from jwt identity
+    :return: Filled data dictionary and an error message if budget returns nothing
+    """
     data["amount"] = float(data.get("amount", "0"))
     data["description"] = data.get("description", "None")
-    data["user_id"] = user_id
+    data["user_id"] = int(user_id)
     data["created_at"] = datetime.now().strftime("%Y-%m-%d")
     data["updated_at"] = None
     budget, error_msg = get_budget_for_user(user_id, data["expense_date"][:7])
     if error_msg:
         return None, f"Something went wrong {error_msg}"
-    data["budget_id"] = budget.budget_id
+    data["budget_id"] = budget.get("budget_id")
     return data, None
 
 
 def prepare_budget_data(data, user_id):
     data["user_id"] = user_id
-    data["budget_amount"] = float(data.get("amount", "0"))
+    data["budget_amount"] = float(data.get("budget_amount", "0"))
     data["status_id"] = 1
     data["created_at"] = datetime.now().strftime("%Y-%m-%d")
     data["updated_at"] = None
