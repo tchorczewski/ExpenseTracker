@@ -77,6 +77,11 @@ def is_valid_category(cat_id):
 
 
 def validate_budget(data) -> (bool, str):
+    """
+    Takes the raw data from requests and checks for required fields that user has to fill and verifies the integrity of the data.
+    :param data: Raw data from the API request
+    :return: Tuple (Bool, error_msg) Bool of the validity check and error message if applicable
+    """
     required_fields = ["budget_month", "budget_year", "budget_amount"]
     for field in required_fields:
         if field not in data or not data[field]:
