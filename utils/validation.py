@@ -38,7 +38,19 @@ def is_valid_date(date) -> bool:
 
 
 def is_valid_year(year):
-    return isinstance(year, int) and year in range(1922, 2026)
+    try:
+        year = int(year)
+        return 1922 <= year <= datetime.now().year + 10
+    except ValueError:
+        return False
+
+
+def is_valid_month(month):
+    try:
+        month = int(month)
+        return 1 <= month <= 12
+    except ValueError:
+        return False
 
 
 def validate_expense(data) -> (bool, str):
@@ -74,4 +86,8 @@ def validate_budget(data) -> (bool, str):
             or data["budget_amount"] <= 0
         ):
             return False, "Incorrect value passed as amount"
+        if not is_valid_year(data["budget_year"]):
+            return False, f"Incorrect year format, try again"
+        if not is_valid_month(data["budget_month"]):
+            return False, f"Incorrect month format, try again"
         return True, None

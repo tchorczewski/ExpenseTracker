@@ -85,6 +85,8 @@ def prepare_expense_data(data, user_id) -> (object, str):
 def prepare_budget_data(data, user_id):
     data["user_id"] = user_id
     data["budget_amount"] = float(data.get("budget_amount", "0"))
+    data["budget_month"] = int(data["budget_month"])
+    data["budget_year"] = int(data["budget_year"])
     data["status_id"] = 1
     data["created_at"] = datetime.now().strftime("%Y-%m-%d")
     data["updated_at"] = None

@@ -93,25 +93,20 @@ def get_current_months_budget():
 @budget_bp.route("/create_budget", methods=["POST"])
 @jwt_required()
 def create_budget():
-    """
-    Gotta check if there is one for passed month and year, then validate against it and return an error that u need to edit/delete one
-    :return:
-    """
     user_id = helpers.get_user_id_from_token()
     if not user_id:
         return jsonify({"message": "Unauthorized"}), 401
     user = helpers.get_current_user(user_id)
     raw_data = request.form.to_dict()
-    raw_data["budget_month"] = int(raw_data["budget_month"])
-    raw_data["budget_year"] = int(raw_data["budget_year"])
+    is_valid, error_msg = validate_budget(raw_data)
+    if not is_valid:
+        return jsonify({"message": f"Something went wrong {error_msg}"}), 400
     data = helpers.prepare_budget_data(raw_data, user.user_id)
-    is_valid, error_msg = validate_budget(data)
     selected_date = f"{data['budget_year']}-{data['budget_month']}"
     existing_budget, _ = helpers.get_budget_for_user(user_id, selected_date)
     if existing_budget:
         return jsonify({"message": "Budget already exists"}), 409
-    if not is_valid:
-        return jsonify({"message": f"Something went wrong {error_msg}"}), 400
+
     budget = Budgets(**data)
     try:
         db.session.add(budget)
