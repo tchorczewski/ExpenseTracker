@@ -106,6 +106,10 @@ def create_budget():
     raw_data["budget_year"] = int(raw_data["budget_year"])
     data = helpers.prepare_budget_data(raw_data, user.user_id)
     is_valid, error_msg = validate_budget(data)
+    selected_date = f"{data['budget_year']}-{data['budget_month']}"
+    existing_budget, _ = helpers.get_budget_for_user(user_id, selected_date)
+    if existing_budget:
+        return jsonify({"message": "Budget already exists"}), 409
     if not is_valid:
         return jsonify({"message": f"Something went wrong {error_msg}"}), 400
     budget = Budgets(**data)
