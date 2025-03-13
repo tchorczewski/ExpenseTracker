@@ -1,9 +1,11 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError, OperationalError
-from utils import validation
+from sqlalchemy import select
+from utils import validation, helpers
 from db.models import Users, Expenses
 from db import db
+from utils.mappers import expense_mapper
 
 expense_bp = Blueprint("expenses", __name__)
 
@@ -11,37 +13,29 @@ expense_bp = Blueprint("expenses", __name__)
 @expense_bp.route("/get_expenses", methods=["GET"])
 @jwt_required()
 def get_users_expenses():
-    user_id = get_jwt_identity()
-    user = Users.query.filter_by(user_id=user_id).first()
+    user_id = helpers.get_user_id_from_token()
+    if not user_id:
+        return jsonify({"message": "Unauthorized"}), 401
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
+    user = helpers.get_current_user(user_id)
     if user:
-        expenses = (
-            db.session.query(
-                Expenses.category,
-                Expenses.amount,
-                Expenses.description,
-                Expenses.date,
-            )
+        stmt = (
+            select(Expenses)
             .join(Users, Expenses.user_id == Users.user_id)
             .filter(Users.user_id == user.user_id)
-            .paginate(page=page, per_page=per_page, error_out=False)
+            .limit(per_page)
+            .offset((page - 1) * per_page)
         )
-        expenses_list = [
-            {
-                "category": expense[0],
-                "amount": expense[1],
-                "description": expense[2],
-                "date": expense[3].strftime("%Y-%m-%d"),
-            }
-            for expense in expenses.items
-        ]
+        expenses = db.session.execute(stmt).scalars().all()
+
+        expenses_list = [expense_mapper(expense) for expense in expenses]
         response = {
             "expenses": expenses_list,
-            "page": expenses.page,
-            "per_page": expenses.per_page,
-            "total": expenses.total,
-            "pages": expenses.pages,
+            # "page": expenses.page,
+            # "per_page": expenses.per_page,
+            # "total": expenses.total,
+            # "pages": expenses.pages,
         }
         return jsonify(response), 200
     else:
@@ -52,30 +46,21 @@ def get_users_expenses():
 @jwt_required()
 def add_expense():
     if request.method == "POST":
-        user = get_jwt_identity()
-        data = request.form.to_dict()
-        data["amount"] = float(data.get("amount", "0"))
-        data["description"] = data.get("description", "None")
-        data["user_id"] = user
-
+        user = helpers.get_user_id_from_token()
+        if not user:
+            return jsonify({"message": "Unauthorized"}), 401
+        raw_data = request.form.to_dict()
+        data, error_msg = helpers.prepare_expense_data(raw_data, user)
+        if error_msg:
+            return jsonify({"message": f"Something went wrong {error_msg}"}), 400
         is_valid, error_msg = validation.validate_expense(data)
         if not is_valid:
             return jsonify({"message": error_msg}), 400
-
         expense = Expenses(**data)
-
         try:
             db.session.add(expense)
             db.session.commit()
-            response = jsonify(
-                {
-                    "category": expense.category,
-                    "amount": expense.amount,
-                    "description": expense.description,
-                    "date": expense.date,
-                    "user_id": expense.user_id,
-                }
-            )
+            response = jsonify(expense_mapper(expense))
             return response, 201
         except IntegrityError:
             db.session.rollback()
@@ -91,14 +76,16 @@ def add_expense():
 @expense_bp.route("/delete_expense/<int:expense_id>", methods=["DELETE"])
 @jwt_required()
 def delete_expense(expense_id):
-    current_user = get_jwt_identity()
+    user_id = helpers.get_user_id_from_token()
+    if not user_id:
+        return jsonify({"message": "Unauthorized"}), 404
     if request.method == "DELETE":
         expense = Expenses.query.get(expense_id)
 
         if not expense:
             return jsonify({"message": "Expense not found"}), 404
 
-        if expense.user_id != int(current_user):
+        if expense.user_id != int(user_id):
             return (
                 jsonify({"message": "Unauthorized"}),
                 403,
@@ -123,13 +110,15 @@ def delete_expense(expense_id):
 @expense_bp.route("/edit_expense/<int:expense_id>", methods=["PUT"])
 @jwt_required()
 def edit_expense(expense_id):
-    current_user = get_jwt_identity()
+    user_id = helpers.get_user_id_from_token()
+    if not user_id:
+        return jsonify({"message": "Unauthorized"}), 404
     if request.method == "PUT":
         expense = Expenses.query.get(expense_id)
 
         if not expense:
             return jsonify({"message": "Expense not found"}), 404
-        if int(current_user) != expense.user_id:
+        if int(user_id) != expense.user_id:
             return (
                 jsonify({"message": "Unauthorized"}),
                 403,

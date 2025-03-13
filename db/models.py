@@ -1,4 +1,7 @@
 from datetime import datetime, timezone, date
+
+from sqlalchemy.orm import backref
+
 from . import db
 
 
@@ -16,9 +19,13 @@ class Expenses(db.Model):
         db.DateTime, nullable=False, default=datetime.now(timezone.utc)
     )
     updated_at = db.Column(db.DateTime)
+    budget_id = db.Column(
+        db.Integer, db.ForeignKey("budgets.budget_id"), nullable=False
+    )
 
     user = db.relationship("Users", backref="expenses")
     category = db.relationship("ExpenseCategories", backref="expenses")
+    budgets = db.relationship("Budgets", backref="expenses")
 
 
 class Users(db.Model):
@@ -45,10 +52,10 @@ class Users(db.Model):
     status_id = db.relationship("UserStatuses", backref="users")
 
 
-class Budget(db.Model):
+class Budgets(db.Model):
     __tablename__ = "budgets"
     budget_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
     budget_month = db.Column(db.Integer, nullable=False)
     budget_year = db.Column(db.Integer, nullable=False)
     budget_amount = db.Column(db.Numeric(10, 2), nullable=False)
@@ -113,3 +120,9 @@ class IncomeCategories(db.Model):
     __tablename__ = "income_categories"
     category_id = db.Column(db.Integer, primary_key=True)
     category_name = db.Column(db.String(255))
+
+
+class BudgetStatuses(db.Model):
+    __tablename__ = "budget_statuses"
+    status_id = db.Column(db.Integer, primary_key=True)
+    status_name = db.Column(db.String(255))

@@ -37,18 +37,62 @@ def is_valid_date(date) -> bool:
         return False
 
 
+def is_valid_year(year):
+    try:
+        year = int(year)
+        return 1922 <= year <= datetime.now().year + 10
+    except ValueError:
+        return False
+
+
+def is_valid_month(month):
+    try:
+        month = int(month)
+        return 1 <= month <= 12
+    except ValueError:
+        return False
+
+
 def validate_expense(data) -> (bool, str):
     """
     Validation method used when creating expenses via API.
     :param data: Data from a create_expense request
     :return: A boolean value if the validation is OK, additional error message to inform where the issue is
     """
-    required_fields = ["category", "amount", "date"]
+    required_fields = ["category_id", "amount", "expense_date", "budget_id"]
     for field in required_fields:
         if field not in data or not data[field]:
             return False, f"Missing required field: {field}"
     if not isinstance(data["amount"], (int, float)) or data["amount"] <= 0:
         return False, "Incorrect value passed as amount"
-    if not is_valid_date(data["date"]):
+    if not is_valid_date(data["expense_date"]):
         return False, "Incorrect date format, should be YYYY-MM-DD"
+    if not is_valid_category(int(data["category_id"])):
+        return False, "Out of scope for expense categories please contact the developer"
     return True, None
+
+
+def is_valid_category(cat_id):
+    return isinstance(cat_id, int) and cat_id in range(0, 6)
+
+
+def validate_budget(data) -> (bool, str):
+    """
+    Takes the raw data from requests and checks for required fields that user has to fill and verifies the integrity of the data.
+    :param data: Raw data from the API request
+    :return: Tuple (Bool, error_msg) Bool of the validity check and error message if applicable
+    """
+    required_fields = ["budget_month", "budget_year", "budget_amount"]
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return False, f"Missing required field: {field}"
+        if (
+            not isinstance(data["budget_amount"], (int, float))
+            or data["budget_amount"] <= 0
+        ):
+            return False, "Incorrect value passed as amount"
+        if not is_valid_year(data["budget_year"]):
+            return False, f"Incorrect year format, try again"
+        if not is_valid_month(data["budget_month"]):
+            return False, f"Incorrect month format, try again"
+        return True, None
