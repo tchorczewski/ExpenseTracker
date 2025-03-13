@@ -122,3 +122,21 @@ def create_budget():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+
+@budget_bp.route("/edit_budget", methods=["POST"])
+@jwt_required()
+def edit_budget():
+    user_id = helpers.get_user_id_from_token()
+    if not user_id:
+        return jsonify({"message": "Unauthorized"}), 401
+    user = helpers.get_current_user(user_id)
+    raw_data = request.form.to_dict()
+    is_valid, error_msg = validate_budget(raw_data)
+    if not is_valid:
+        return jsonify({"message": f"Something went wrong {error_msg}"}), 400
+    selected_date = f"{raw_data['budget_year']}-{raw_data['budget_month']}"
+    existing_budget = helpers.get_budget_for_user(user.user_id, selected_date)
+    if existing_budget:
+        return jsonify({"message": "Budget already exists"}), 409
+    raw_data["budget_amount"] = float(raw_data.get("amount", "0"))
