@@ -11,7 +11,7 @@ from datetime import datetime
 from utils.mappers import budget_mapper
 
 
-def get_current_user(user_id):
+def _get_current_user(user_id):
     """
     :param user_id: User_id taken from JWT Identity
     :return: Returns the result of check if user with such an id exists in the db.
@@ -20,11 +20,25 @@ def get_current_user(user_id):
     return user
 
 
-def get_user_id_from_token():
+def _get_user_id_from_token():
     try:
         return get_jwt_identity()
     except NoAuthorizationError:
         return None
+
+
+def get_auth_user():
+    """
+    Gets and verifies the user based on JWT cookies.
+    :return: (user, error_response,status_code)
+    """
+    user_id = _get_user_id_from_token()
+    if not user_id:
+        return None, jsonify({"message": "Unauthorized"}), 401
+    user = _get_current_user(user_id)
+    if not user:
+        return None, jsonify({"message": "User not found"}), 404
+    return user, None, 200
 
 
 def get_current_date():

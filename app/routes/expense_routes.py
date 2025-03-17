@@ -5,6 +5,7 @@ from sqlalchemy import select
 from utils import validation, helpers
 from db.models import Users, Expenses
 from db import db
+from utils.helpers import get_auth_user
 from utils.mappers import expense_mapper
 
 expense_bp = Blueprint("expenses", __name__)
@@ -13,12 +14,11 @@ expense_bp = Blueprint("expenses", __name__)
 @expense_bp.route("/get_expenses", methods=["GET"])
 @jwt_required()
 def get_users_expenses():
-    user_id = helpers.get_user_id_from_token()
-    if not user_id:
-        return jsonify({"message": "Unauthorized"}), 401
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
-    user = helpers.get_current_user(user_id)
     if user:
         stmt = (
             select(Expenses)
@@ -46,9 +46,9 @@ def get_users_expenses():
 @jwt_required()
 def add_expense():
     if request.method == "POST":
-        user = helpers.get_user_id_from_token()
-        if not user:
-            return jsonify({"message": "Unauthorized"}), 401
+        user, error_response, status_code = get_auth_user()
+        if error_response:
+            return error_response, status_code
         raw_data = request.form.to_dict()
         data, error_msg = helpers.prepare_expense_data(raw_data, user)
         if error_msg:
@@ -76,16 +76,16 @@ def add_expense():
 @expense_bp.route("/delete_expense/<int:expense_id>", methods=["DELETE"])
 @jwt_required()
 def delete_expense(expense_id):
-    user_id = helpers.get_user_id_from_token()
-    if not user_id:
-        return jsonify({"message": "Unauthorized"}), 404
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
     if request.method == "DELETE":
         expense = Expenses.query.get(expense_id)
 
         if not expense:
             return jsonify({"message": "Expense not found"}), 404
 
-        if expense.user_id != int(user_id):
+        if expense.user_id != user.user_id:
             return (
                 jsonify({"message": "Unauthorized"}),
                 403,
@@ -110,15 +110,15 @@ def delete_expense(expense_id):
 @expense_bp.route("/edit_expense/<int:expense_id>", methods=["PUT"])
 @jwt_required()
 def edit_expense(expense_id):
-    user_id = helpers.get_user_id_from_token()
-    if not user_id:
-        return jsonify({"message": "Unauthorized"}), 404
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
     if request.method == "PUT":
         expense = Expenses.query.get(expense_id)
 
         if not expense:
             return jsonify({"message": "Expense not found"}), 404
-        if int(user_id) != expense.user_id:
+        if user.user_id != expense.user_id:
             return (
                 jsonify({"message": "Unauthorized"}),
                 403,
