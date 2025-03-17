@@ -6,6 +6,8 @@ from utils import helpers
 from sqlalchemy.exc import IntegrityError, OperationalError
 from datetime import datetime
 from sqlalchemy import select
+
+from utils.helpers import get_auth_user
 from utils.mappers import budget_mapper
 from utils.validation import validate_budget
 
@@ -19,14 +21,14 @@ def get_any_budget():
     Display budget for a selected month
     :return: Budget amount if set, None if not set
     """
-    user_id = helpers.get_user_id_from_token()
-    if not user_id:
-        return jsonify({"message": "Unauthorized"}), 401
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
     selected_date = datetime.strptime(request.form["date"], "%Y-%m")
     if not selected_date:
         return jsonify({"message": "Date not provided"}), 401
 
-    budget, error_msg = helpers.get_budget_for_user(user_id, selected_date)
+    budget, error_msg = helpers.get_budget_for_user(user.user_id, selected_date)
     if error_msg:
         return jsonify({"message": error_msg})
 
@@ -36,10 +38,9 @@ def get_any_budget():
 @budget_bp.route("/get_all_budgets", methods=["GET"])
 @jwt_required()
 def get_all_budgets():
-    user_id = helpers.get_user_id_from_token()
-    if not user_id:
-        return jsonify({"message": "Unauthorized"}), 401
-    user = helpers.get_current_user(user_id)
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
     try:
@@ -66,10 +67,9 @@ def get_all_budgets():
 @budget_bp.route("/get_current_budget", methods=["GET"])
 @jwt_required()
 def get_current_months_budget():
-    user_id = helpers.get_user_id_from_token()
-    if not user_id:
-        return jsonify({"message": "Unauthorized"}), 401
-    user = helpers.get_current_user(user_id)
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
     current_month, current_year = datetime.now().month, datetime.now().year
     try:
         stmt = (
@@ -93,17 +93,16 @@ def get_current_months_budget():
 @budget_bp.route("/create_budget", methods=["POST"])
 @jwt_required()
 def create_budget():
-    user_id = helpers.get_user_id_from_token()
-    if not user_id:
-        return jsonify({"message": "Unauthorized"}), 401
-    user = helpers.get_current_user(user_id)
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
     raw_data = request.form.to_dict()
     is_valid, error_msg = validate_budget(raw_data)
     if not is_valid:
         return jsonify({"message": f"Something went wrong {error_msg}"}), 400
     data = helpers.prepare_budget_data(raw_data, user.user_id)
     selected_date = f"{data['budget_year']}-{data['budget_month']}"
-    existing_budget, _ = helpers.get_budget_for_user(user_id, selected_date)
+    existing_budget, _ = helpers.get_budget_for_user(user.user_id, selected_date)
     if existing_budget:
         return jsonify({"message": "Budget already exists"}), 409
 
@@ -126,17 +125,33 @@ def create_budget():
 
 @budget_bp.route("/edit_budget", methods=["POST"])
 @jwt_required()
+# SPAGHETTTTTTTTIIIIIII
 def edit_budget():
-    user_id = helpers.get_user_id_from_token()
-    if not user_id:
-        return jsonify({"message": "Unauthorized"}), 401
-    user = helpers.get_current_user(user_id)
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
     raw_data = request.form.to_dict()
     is_valid, error_msg = validate_budget(raw_data)
     if not is_valid:
         return jsonify({"message": f"Something went wrong {error_msg}"}), 400
     selected_date = f"{raw_data['budget_year']}-{raw_data['budget_month']}"
-    existing_budget = helpers.get_budget_for_user(user.user_id, selected_date)
-    if existing_budget:
-        return jsonify({"message": "Budget already exists"}), 409
+    budget, error_msg = helpers.get_budget_for_user(user.user_id, selected_date)
+    if not budget:
+        return jsonify({"message": f"{error_msg}"}), 409
     raw_data["budget_amount"] = float(raw_data.get("amount", "0"))
+    budget["amount"] = raw_data["budget_amount"]
+    try:
+        db.session.commit()
+        response = jsonify(
+            {"message": f"Budget edited. New budget is {budget['amount']}"}
+        )
+        return response, 200
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"message": "Database integrity error"}), 400
+    except OperationalError:
+        db.session.rollback()
+        return jsonify({"message": "Database connection issue"}), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
