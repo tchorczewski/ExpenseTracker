@@ -8,7 +8,7 @@ def budget_mapper(budget):
         "status_id": budget.status_id,
         "created_at": budget.created_at.strftime("%Y-%m-%d"),
         "updated_at": (
-            budget.updated_atstrftime("%Y-%m-%d") if budget.updated_at else None
+            budget.updated_at.strftime("%Y-%m-%d") if budget.updated_at else None
         ),
     }
 

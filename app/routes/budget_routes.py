@@ -28,11 +28,13 @@ def get_any_budget():
     if not selected_date:
         return jsonify({"message": "Date not provided"}), 401
 
-    budget, error_msg = helpers.get_budget_for_user(user.user_id, selected_date)
+    _, mapped_budget, error_msg = helpers.get_budget_for_user(
+        user.user_id, selected_date
+    )
     if error_msg:
         return jsonify({"message": error_msg})
 
-    return jsonify(budget), 200
+    return jsonify(mapped_budget), 200
 
 
 @budget_bp.route("/get_all_budgets", methods=["GET"])
@@ -102,7 +104,7 @@ def create_budget():
         return jsonify({"message": f"Something went wrong {error_msg}"}), 400
     data = helpers.prepare_budget_data(raw_data, user.user_id)
     selected_date = f"{data['budget_year']}-{data['budget_month']}"
-    existing_budget, _ = helpers.get_budget_for_user(user.user_id, selected_date)
+    existing_budget, _, _ = helpers.get_budget_for_user(user.user_id, selected_date)
     if existing_budget:
         return jsonify({"message": "Budget already exists"}), 409
 
@@ -123,35 +125,52 @@ def create_budget():
         return jsonify({"error": str(e)}), 500
 
 
-@budget_bp.route("/edit_budget", methods=["POST"])
+@budget_bp.route("/edit_budget", methods=["PUT"])
 @jwt_required()
-# SPAGHETTTTTTTTIIIIIII
 def edit_budget():
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
+
     raw_data = request.form.to_dict()
     is_valid, error_msg = validate_budget(raw_data)
     if not is_valid:
         return jsonify({"message": f"Something went wrong {error_msg}"}), 400
-    selected_date = f"{raw_data['budget_year']}-{raw_data['budget_month']}"
-    budget, error_msg = helpers.get_budget_for_user(user.user_id, selected_date)
-    if not budget:
-        return jsonify({"message": f"{error_msg}"}), 409
-    raw_data["budget_amount"] = float(raw_data.get("amount", "0"))
-    budget["amount"] = raw_data["budget_amount"]
+
+    budget, _, error_msg = helpers.get_budget_for_user(
+        user.user_id,
+        helpers.parse_date(raw_data["budget_year"], raw_data["budget_month"]),
+    )
+    if error_msg:
+        return jsonify({"message": f"Something went wrong: {error_msg}"})
+
     try:
+        raw_data["budget_amount"] = float(raw_data["budget_amount"])
+    except (ValueError, TypeError):
+        return jsonify({"message": "Incorrect amount format"}), 400
+
+    try:
+        budget.budget_amount = raw_data["budget_amount"]
+        budget.updated_at = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
-        response = jsonify(
-            {"message": f"Budget edited. New budget is {budget['amount']}"}
+        return (
+            jsonify(
+                {
+                    "message": "Budget updated successfully",
+                    "budget": helpers.budget_mapper(budget),
+                }
+            ),
+            200,
         )
-        return response, 200
+
     except IntegrityError:
         db.session.rollback()
         return jsonify({"message": "Database integrity error"}), 400
+
     except OperationalError:
         db.session.rollback()
         return jsonify({"message": "Database connection issue"}), 500
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
