@@ -69,12 +69,11 @@ def get_budget_for_user(user_id, selected_date_str):
         result = db.session.execute(stmt).scalar_one_or_none()
         if not result:
             return None, "No budget for selected period"
-        budget = budget_mapper(result)
-        return budget, None
+        return result, budget_mapper(result), None
     except OperationalError:
-        return None, "Connection error"
+        return None, None, "Connection error"
     except Exception as e:
-        return None, f"Unexpected error {str(e)}"
+        return None, None, f"Unexpected error {str(e)}"
 
 
 def prepare_expense_data(data, user_id) -> (object, str):
@@ -105,3 +104,13 @@ def prepare_budget_data(data, user_id):
     data["created_at"] = datetime.now().strftime("%Y-%m-%d")
     data["updated_at"] = None
     return data
+
+
+def parse_date(year, month) -> str:
+    """
+    There is no need to validate data as it will be done on an earlier step
+    :param year: Year from the request
+    :param month: Month from the request
+    :return: date in format YYYY-MM
+    """
+    return f"{year}-{int(month):02d}"

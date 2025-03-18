@@ -37,7 +37,7 @@ def is_valid_date(date) -> bool:
         return False
 
 
-def is_valid_year(year):
+def is_valid_year(year) -> bool:
     try:
         year = int(year)
         return 1922 <= year <= datetime.now().year + 10
@@ -45,11 +45,19 @@ def is_valid_year(year):
         return False
 
 
-def is_valid_month(month):
+def is_valid_month(month) -> bool:
     try:
         month = int(month)
         return 1 <= month <= 12
     except ValueError:
+        return False
+
+
+def is_valid_amount(amount) -> bool:
+    try:
+        amount = float(amount)
+        return amount >= 0
+    except (ValueError, TypeError):
         return False
 
 
@@ -63,7 +71,7 @@ def validate_expense(data) -> (bool, str):
     for field in required_fields:
         if field not in data or not data[field]:
             return False, f"Missing required field: {field}"
-    if not isinstance(data["amount"], (int, float)) or data["amount"] <= 0:
+    if not is_valid_amount(data["amount"]):
         return False, "Incorrect value passed as amount"
     if not is_valid_date(data["expense_date"]):
         return False, "Incorrect date format, should be YYYY-MM-DD"
@@ -72,7 +80,15 @@ def validate_expense(data) -> (bool, str):
     return True, None
 
 
-def is_valid_category(cat_id):
+def is_valid_budget_status(budget) -> bool:
+    """
+    Verifies if the status of a budget is allowing the attempted operation
+    :return: True if operation is permitted on given budget
+    """
+    pass
+
+
+def is_valid_category(cat_id) -> bool:
     return isinstance(cat_id, int) and cat_id in range(0, 6)
 
 
@@ -86,13 +102,10 @@ def validate_budget(data) -> (bool, str):
     for field in required_fields:
         if field not in data or not data[field]:
             return False, f"Missing required field: {field}"
-        if (
-            not isinstance(data["budget_amount"], (int, float))
-            or data["budget_amount"] <= 0
-        ):
+        if not is_valid_amount(data["budget_amount"]):
             return False, "Incorrect value passed as amount"
         if not is_valid_year(data["budget_year"]):
             return False, f"Incorrect year format, try again"
         if not is_valid_month(data["budget_month"]):
             return False, f"Incorrect month format, try again"
-        return True, None
+    return True, None
