@@ -68,7 +68,7 @@ def validate_expense(data) -> (bool, str):
     :param data: Data from a create_expense request
     :return: A boolean value if the validation is OK, additional error message to inform where the issue is
     """
-    required_fields = ["category_id", "amount", "expense_date", "budget_id"]
+    required_fields = ["category_id", "amount", "expense_date"]
     for field in required_fields:
         if field not in data or not data[field]:
             return False, f"Missing required field: {field}"

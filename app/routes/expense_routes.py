@@ -56,7 +56,7 @@ def add_expense():
         if not is_valid:
             return jsonify({"message": error_msg}), 400
 
-        data, error_msg = helpers.prepare_expense_data(raw_data, user)
+        data, error_msg = helpers.prepare_expense_data(raw_data, user.user_id)
         if error_msg:
             return jsonify({"message": f"Something went wrong {error_msg}"}), 400
 
@@ -77,7 +77,7 @@ def add_expense():
             return jsonify({"error": str(e)}), 500
 
 
-@expense_bp.route("/delete_expense/<int:expense_id>", methods=["DELETE"])
+@expense_bp.route("/<int:expense_id>/delete_expense", methods=["DELETE"])
 @jwt_required()
 def delete_expense(expense_id):
     user, error_msg, status_code = get_auth_user()
@@ -118,9 +118,10 @@ def delete_expense(expense_id):
         return jsonify({"error": str(e)}), 500
 
 
-@expense_bp.route("/edit_expense/<int:expense_id>", methods=["PUT"])
+@expense_bp.route("/<int:expense_id>/edit_expense", methods=["PUT"])
 @jwt_required()
 def edit_expense(expense_id):
+    # Something wrong, needs debugging
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code

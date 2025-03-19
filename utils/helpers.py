@@ -68,7 +68,7 @@ def get_budget_for_user(user_id, selected_date_str):
     try:
         result = db.session.execute(stmt).scalar_one_or_none()
         if not result:
-            return None, "No budget for selected period"
+            return None, None, "No budget for selected period"
         return result, budget_mapper(result), None
     except OperationalError:
         return None, None, "Connection error"
@@ -88,7 +88,7 @@ def prepare_expense_data(data, user_id) -> (object, str):
     data["user_id"] = int(user_id)
     data["created_at"] = datetime.now().strftime("%Y-%m-%d")
     data["updated_at"] = None
-    budget, error_msg = get_budget_for_user(user_id, data["expense_date"][:7])
+    _, budget, error_msg = get_budget_for_user(user_id, data["expense_date"][:7])
     if error_msg:
         return None, f"Something went wrong {error_msg}"
     data["budget_id"] = budget.get("budget_id")
