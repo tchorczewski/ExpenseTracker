@@ -17,9 +17,11 @@ def get_users_expenses():
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
+
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
-    if user:
+
+    try:
         stmt = (
             select(Expenses)
             .join(Users, Expenses.user_id == Users.user_id)
@@ -30,16 +32,14 @@ def get_users_expenses():
         expenses = db.session.execute(stmt).scalars().all()
 
         expenses_list = [expense_mapper(expense) for expense in expenses]
-        response = {
-            "expenses": expenses_list,
-            # "page": expenses.page,
-            # "per_page": expenses.per_page,
-            # "total": expenses.total,
-            # "pages": expenses.pages,
-        }
+        response = {"expenses": expenses_list}
         return jsonify(response), 200
-    else:
-        return jsonify({"message": "User not found"}), 404
+
+    except OperationalError:
+        msg = {"message": "Connection error"}
+        return jsonify(msg), 500
+    except Exception as e:
+        return jsonify({"message": f"Error {str(e)}"}), 500
 
 
 @expense_bp.route("/add_expense", methods=["POST"])
@@ -49,13 +49,17 @@ def add_expense():
         user, error_response, status_code = get_auth_user()
         if error_response:
             return error_response, status_code
+
         raw_data = request.form.to_dict()
+
+        is_valid, error_msg = validation.validate_expense(raw_data)
+        if not is_valid:
+            return jsonify({"message": error_msg}), 400
+
         data, error_msg = helpers.prepare_expense_data(raw_data, user)
         if error_msg:
             return jsonify({"message": f"Something went wrong {error_msg}"}), 400
-        is_valid, error_msg = validation.validate_expense(data)
-        if not is_valid:
-            return jsonify({"message": error_msg}), 400
+
         expense = Expenses(**data)
         try:
             db.session.add(expense)
@@ -76,35 +80,42 @@ def add_expense():
 @expense_bp.route("/delete_expense/<int:expense_id>", methods=["DELETE"])
 @jwt_required()
 def delete_expense(expense_id):
-    user, error_response, status_code = get_auth_user()
-    if error_response:
-        return error_response, status_code
-    if request.method == "DELETE":
-        expense = Expenses.query.get(expense_id)
+    user, error_msg, status_code = get_auth_user()
+    if error_msg:
+        return error_msg, status_code
 
-        if not expense:
-            return jsonify({"message": "Expense not found"}), 404
+    stmt = select(Expenses).filter(Expenses.expense_id == expense_id)
+    try:
+        expense = db.session.execute(stmt).scalar_one_or_none()
+    except OperationalError:
+        msg = {"message": "Connection error"}
+        return jsonify(msg), 500
+    except Exception as e:
+        return jsonify({"message": f"Error {str(e)}"}), 500
 
-        if expense.user_id != user.user_id:
-            return (
-                jsonify({"message": "Unauthorized"}),
-                403,
-            )
+    if not expense:
+        return jsonify({"message": "Expense not found"}), 404
 
-        try:
-            db.session.delete(expense)
-            db.session.commit()
-            response = f"Expense {expense.id} successfully deleted."
-            return jsonify(response), 200
-        except IntegrityError:
-            db.session.rollback()
-            return jsonify({"message": "Database integrity error"}), 400
-        except OperationalError:
-            db.session.rollback()
-            return jsonify({"message": "Database connection issue"}), 500
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({"error": str(e)}), 500
+    if expense.user_id != user.user_id:
+        return (
+            jsonify({"message": "Unauthorized"}),
+            403,
+        )
+
+    try:
+        db.session.delete(expense)
+        db.session.commit()
+        response = {"message": f"Expense {expense.expense_id} successfully deleted."}
+        return jsonify(response), 200
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"message": "Database integrity error"}), 400
+    except OperationalError:
+        db.session.rollback()
+        return jsonify({"message": "Database connection issue"}), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 @expense_bp.route("/edit_expense/<int:expense_id>", methods=["PUT"])
@@ -113,38 +124,42 @@ def edit_expense(expense_id):
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
-    if request.method == "PUT":
-        expense = Expenses.query.get(expense_id)
 
-        if not expense:
-            return jsonify({"message": "Expense not found"}), 404
-        if user.user_id != expense.user_id:
-            return (
-                jsonify({"message": "Unauthorized"}),
-                403,
-            )
-        data = request.get_json()
-        allowed_fields = set(Expenses.__table__.columns.keys()) - {"id", "user_id"}
+    expense = Expenses.query.get(expense_id)
 
-        for key, value in data.items():
-            if key in allowed_fields:
-                setattr(expense, key, float(value) if key == "amount" else value)
+    if not expense:
+        return jsonify({"message": "Expense not found"}), 404
+    if user.user_id != expense.user_id:
+        return (
+            jsonify({"message": "Unauthorized"}),
+            403,
+        )
+    data = request.get_json()
+    is_valid, error_msg = validation.validate_expense(data)
+    if not is_valid:
+        return jsonify({"message": error_msg}), 400
 
-        try:
-            db.session.commit()
-            response = {
-                "message": f"Expense {expense.id} successfully updated",
-                "updated_expense": {
-                    field: getattr(expense, field) for field in allowed_fields
-                },
-            }
-            return jsonify(response), 200
-        except IntegrityError:
-            db.session.rollback()
-            return jsonify({"message": "Database integrity error"}), 400
-        except OperationalError:
-            db.session.rollback()
-            return jsonify({"message": "Database connection issue"}), 500
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({"error": str(e)}), 500
+    allowed_fields = set(Expenses.__table__.columns.keys()) - {"id", "user_id"}
+
+    for key, value in data.items():
+        if key in allowed_fields:
+            setattr(expense, key, float(value) if key == "amount" else value)
+
+    try:
+        db.session.commit()
+        response = {
+            "message": f"Expense {expense.id} successfully updated",
+            "updated_expense": {
+                field: getattr(expense, field) for field in allowed_fields
+            },
+        }
+        return jsonify(response), 200
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"message": "Database integrity error"}), 400
+    except OperationalError:
+        db.session.rollback()
+        return jsonify({"message": "Database connection issue"}), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500

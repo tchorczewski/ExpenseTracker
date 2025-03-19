@@ -1,15 +1,17 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.orm import selectinload
+
 from db import db
-from db.models import Budgets, Users
+from db.models import Budgets, Users, Expenses
 from utils import helpers
 from sqlalchemy.exc import IntegrityError, OperationalError
 from datetime import datetime
 from sqlalchemy import select
 
 from utils.helpers import get_auth_user
-from utils.mappers import budget_mapper
-from utils.validation import validate_budget
+from utils.mappers import budget_mapper, expense_mapper
+from utils.validation import validate_budget, is_valid_budget_status
 
 budget_bp = Blueprint("budget", __name__)
 
@@ -77,7 +79,7 @@ def get_current_months_budget():
         stmt = (
             select(Budgets)
             .join(Users, Budgets.user_id == Users.user_id)
-            .filter(Users.user_id == user.user_id)
+            .filter(Budgets.user_id == user.user_id)
             .filter(Budgets.budget_month == current_month)
             .filter(Budgets.budget_year == current_year)
         )
@@ -92,6 +94,27 @@ def get_current_months_budget():
         return jsonify({"message": f"Error {str(e)}"}), 500
 
 
+@budget_bp.route("/<int:budget_id>/get_budget_details", methods=["GET"])
+@jwt_required()
+def get_budget_details(budget_id):
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
+    stmt = (
+        select(Budgets)
+        .options(selectinload(Budgets.expenses))
+        .filter(Budgets.budget_id == budget_id, Budgets.user_id == user.user_id)
+    )
+    try:
+        budgets = db.session.execute(stmt).scalars().first()
+        expenses = [expense_mapper(expense) for expense in budgets.expenses]
+        return jsonify({"budget": budget_mapper(budgets), "expenses": expenses}), 200
+    except OperationalError:
+        return jsonify({"message": "Database connection issue"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @budget_bp.route("/create_budget", methods=["POST"])
 @jwt_required()
 def create_budget():
@@ -103,8 +126,9 @@ def create_budget():
     if not is_valid:
         return jsonify({"message": f"Something went wrong {error_msg}"}), 400
     data = helpers.prepare_budget_data(raw_data, user.user_id)
-    selected_date = f"{data['budget_year']}-{data['budget_month']}"
-    existing_budget, _, _ = helpers.get_budget_for_user(user.user_id, selected_date)
+    existing_budget, _, _ = helpers.get_budget_for_user(
+        user.user_id, helpers.parse_date(data["budget_year"], data["budget_month"])
+    )
     if existing_budget:
         return jsonify({"message": "Budget already exists"}), 409
 
@@ -143,7 +167,15 @@ def edit_budget():
     )
     if error_msg:
         return jsonify({"message": f"Something went wrong: {error_msg}"})
-
+    if not is_valid_budget_status(budget):
+        return (
+            jsonify(
+                {
+                    "message": "The operation is not allowed on budgets with statuses 5 and 6"
+                }
+            ),
+            404,
+        )
     try:
         raw_data["budget_amount"] = float(raw_data["budget_amount"])
     except (ValueError, TypeError):

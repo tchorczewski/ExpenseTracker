@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from typing import Any
 
 
 def is_valid_email(email) -> bool:
@@ -85,7 +86,7 @@ def is_valid_budget_status(budget) -> bool:
     Verifies if the status of a budget is allowing the attempted operation
     :return: True if operation is permitted on given budget
     """
-    pass
+    return 0 <= budget.status_id <= 4
 
 
 def is_valid_category(cat_id) -> bool:

@@ -1,7 +1,4 @@
 from datetime import datetime, timezone, date
-
-from sqlalchemy.orm import backref
-
 from . import db
 
 
@@ -25,7 +22,6 @@ class Expenses(db.Model):
 
     user = db.relationship("Users", backref="expenses")
     category = db.relationship("ExpenseCategories", backref="expenses")
-    budgets = db.relationship("Budgets", backref="expenses")
 
 
 class Users(db.Model):
@@ -67,8 +63,9 @@ class Budgets(db.Model):
     )
     updated_at = db.Column(db.DateTime)
 
-    user = db.relationship("Users", backref="budgets")
-    status = db.relationship("BudgetStatuses", backref="budgets")
+    user = db.relationship("Users", backref="budget")
+    status = db.relationship("BudgetStatuses", backref="budget")
+    expenses = db.relationship("Expenses", backref="budget", lazy="select")
 
     __table_args__ = (
         db.CheckConstraint("budget_month BETWEEN 1 AND 12", name="check_budget_month"),
