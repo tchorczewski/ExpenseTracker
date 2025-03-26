@@ -123,7 +123,6 @@ def delete_expense(expense_id):
 @expense_bp.route("/<int:expense_id>/edit_expense", methods=["PUT", "PATCH"])
 @jwt_required()
 def edit_expense(expense_id):
-    # Something wrong, needs debugging
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
