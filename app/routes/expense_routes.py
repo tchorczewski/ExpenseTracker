@@ -1,3 +1,5 @@
+import datetime
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -136,20 +138,40 @@ def edit_expense(expense_id):
             403,
         )
 
-    data = request.get_json()
-    is_valid, error_msg = validation.validate_expense_edit(user.user_id, data)
-    if not is_valid:
-        return jsonify({"message": error_msg}), 400
+    data = request.form.to_dict()
+    if request.method == "PUT":
+        is_valid, check_new_budget_id, error_msg = validation.validate_expense_edit(
+            data
+        )
+        if not is_valid:
+            return jsonify({"message": error_msg}), 400
+
+    if request.method == "PATCH":
+        is_valid, check_new_budget_id, error_msg = validation.validate_expense_edit(
+            data, is_patch=True
+        )
+        if not is_valid:
+            return jsonify({"message": error_msg}), 400
+
+    if check_new_budget_id:
+        status, new_budget_id, error_msg = helpers.verify_budget_change(
+            user.user_id, data["expense_date"], expense.budget_id
+        )
+        if error_msg:
+            return jsonify({"message": error_msg}), 400
+        if status:
+            expense.budget_id = new_budget_id
 
     for key, value in data.items():
         setattr(expense, key, float(value) if key == "amount" else value)
-
+    expense.updated_at = datetime.datetime.now()
     try:
         db.session.commit()
         response = {
-            "message": f"Expense {expense.id} successfully updated",
+            "message": f"Expense {expense.expense_id} successfully updated",
             "updated_expense": {
-                field: getattr(expense, field) for field in allowed_fields
+                field: getattr(expense, field)
+                for field in expense.__table__.columns.keys()
             },
         }
         return jsonify(response), 200
