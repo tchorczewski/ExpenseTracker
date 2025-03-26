@@ -54,9 +54,9 @@ def get_budget_for_user(user_id, selected_date_str):
     :return: Tuple (Budget object or None, error_message) if no budget found None, if no error, error_message is None
     """
     try:
-        selected_date = datetime.strptime(selected_date_str, "%Y-%m")
+        selected_date = datetime.strptime(selected_date_str, "%Y-%m-%d")
     except ValueError:
-        return None, "Invalid date format. Expected YYYY-MM"
+        return None, None, "Invalid date format. Expected YYYY-MM-DD"
 
     stmt = (
         select(Budgets)
@@ -68,7 +68,7 @@ def get_budget_for_user(user_id, selected_date_str):
     try:
         result = db.session.execute(stmt).scalar_one_or_none()
         if not result:
-            return None, "No budget for selected period"
+            return None, None, "No budget for selected period"
         return result, budget_mapper(result), None
     except OperationalError:
         return None, None, "Connection error"
@@ -88,7 +88,7 @@ def prepare_expense_data(data, user_id) -> (object, str):
     data["user_id"] = int(user_id)
     data["created_at"] = datetime.now().strftime("%Y-%m-%d")
     data["updated_at"] = None
-    budget, error_msg = get_budget_for_user(user_id, data["expense_date"][:7])
+    _, budget, error_msg = get_budget_for_user(user_id, data["expense_date"][:7])
     if error_msg:
         return None, f"Something went wrong {error_msg}"
     data["budget_id"] = budget.get("budget_id")
@@ -114,3 +114,19 @@ def parse_date(year, month) -> str:
     :return: date in format YYYY-MM
     """
     return f"{year}-{int(month):02d}"
+
+
+def verify_budget_change(user_id, date, current_budgets_id):
+    """
+    Method to check if the expense needs to be assigned to a different budget
+    :param user_id: Stored in JWT users_id
+    :param date: Date that user has passed in request to edit within the expense
+    :param current_budgets_id Id of the budget the user is editing
+    :return: Tuple (Bool, new_budget_id). new_budget_id will be an id or None
+    """
+    _, edited_budget, error_msg = get_budget_for_user(user_id, date)
+    if error_msg:
+        return False, None, error_msg
+    if current_budgets_id == edited_budget["budget_id"]:
+        return False, None, None
+    return True, edited_budget["budget_id"], None
