@@ -40,7 +40,7 @@ def verify_user(username, password):
             status,
             user.user_id,
         )
-    return False, None, None
+    return False, None
 
 
 @auth_bp.route("/register", methods=["POST"])
