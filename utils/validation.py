@@ -117,7 +117,13 @@ def validate_budget(data) -> (bool, str):
 
 
 def validate_expense_edit(data, is_patch=False):
-    allowed_fields = ["category_id", "amount", "description", "expense_date"]
+    allowed_fields = [
+        "category_id",
+        "amount",
+        "description",
+        "expense_date",
+        "is_cyclical",
+    ]
     required_fields = ["category_id", "amount", "expense_date"]
     errors = {}
     check_new_budget_id = False
@@ -137,6 +143,57 @@ def validate_expense_edit(data, is_patch=False):
     if "expense_date" in data:
         check_new_budget_id = True
         if not is_valid_date(data["expense_date"]):
+            errors["date"] = "Incorrect date format"
+
+    if "amount" in data:
+        if not is_valid_amount(data["amount"]):
+            errors["amount"] = "Incorrect value passed as amount"
+
+    if "category_id" in data:
+        if not is_valid_category(data["category_id"]):
+            errors["category_id"] = "Incorrect category id passed"
+
+    if errors:
+        return False, check_new_budget_id, errors
+    return True, check_new_budget_id, errors
+
+
+def validate_income(data):
+    required_fields = ["category_id", "amount", "income_date", "is_cyclical"]
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return False, f"Missing required field: {field}"
+    if not is_valid_amount(data["amount"]):
+        return False, f"Incorrect value passed as amount"
+    if not is_valid_date(data["income_date"]):
+        return False, f"Incorrect date format"
+    try:
+        data["category_id"] = int(data["category_id"])
+        return 1 <= data["category_id"] <= 4
+    except (ValueError, TypeError):
+        return False
+
+
+def validate_income_edit(data, is_patch=False):
+    required_fields = ["category_id", "amount", "income_date", "is_cyclical"]
+    errors = {}
+    check_new_budget_id = False
+
+    unknown_fields = [field for field in data if field not in required_fields]
+    if unknown_fields:
+        errors["unknown_fields"] = f"Fields {unknown_fields} not editable"
+
+    if not is_patch:
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            errors["missing_fields"] = f"Missing required fields {missing_fields}"
+        is_valid, error_msg = validate_income(data)
+        if not is_valid:
+            errors["Validation"] = error_msg
+
+    if "income_date" in data:
+        check_new_budget_id = True
+        if not is_valid_date(data["income_date"]):
             errors["date"] = "Incorrect date format"
 
     if "amount" in data:

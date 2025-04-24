@@ -7,7 +7,7 @@ from db.models import Budgets, Users, Expenses
 from utils import helpers
 from sqlalchemy.exc import IntegrityError, OperationalError
 from datetime import datetime
-from sqlalchemy import select
+from sqlalchemy import select, Boolean
 
 from utils.helpers import get_auth_user
 from utils.mappers import budget_mapper, expense_mapper
@@ -133,6 +133,7 @@ def create_budget():
         return jsonify({"message": "Budget already exists"}), 409
 
     budget = Budgets(**data)
+    budget.is_generated = bool(budget.is_generated)  # workaround to be cleaned
     try:
         db.session.add(budget)
         db.session.commit()
