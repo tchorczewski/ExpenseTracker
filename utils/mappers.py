@@ -6,6 +6,7 @@ def budget_mapper(budget):
         "budget_year": budget.budget_year,
         "budget_amount": budget.budget_amount,
         "status_id": budget.status_id,
+        "is_generated": budget.is_generated,
         "created_at": budget.created_at.strftime("%Y-%m-%d"),
         "updated_at": (
             budget.updated_at.strftime("%Y-%m-%d") if budget.updated_at else None
@@ -26,4 +27,20 @@ def expense_mapper(expense):
             expense.updated_at.strftime("%Y-%m-%d") if expense.updated_at else None
         ),
         "budget_id": expense.budget_id,
+    }
+
+
+def income_mapper(income):
+    return {
+        "income_id": income.income_id,
+        "user_id": income.user_id,
+        "category_id": income.category_id,
+        "amount": income.amount,
+        "income_date": income.income_date.strftime("%Y-%m-%d"),
+        "is_cyclical": income.is_cyclical,
+        "budget_id": income.budget_id,
+        "created_at": income.created_at.strftime("%Y-%m-%d"),
+        "updated_at": (
+            income.updated_at.strftime("%Y-%m-%d") if income.updated_at else None
+        ),
     }

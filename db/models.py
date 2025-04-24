@@ -19,6 +19,7 @@ class Expenses(db.Model):
     budget_id = db.Column(
         db.Integer, db.ForeignKey("budgets.budget_id"), nullable=False
     )
+    is_cyclical = db.Column(db.Boolean, nullable=False, default=False)
 
     user = db.relationship("Users", backref="expenses")
     category = db.relationship("ExpenseCategories", backref="expenses")
@@ -62,6 +63,7 @@ class Budgets(db.Model):
         db.DateTime, nullable=False, default=datetime.now(timezone.utc)
     )
     updated_at = db.Column(db.DateTime)
+    is_generated = db.Column(db.Boolean, default=False, nullable=False)
 
     user = db.relationship("Users", backref="budget")
     status = db.relationship("BudgetStatuses", backref="budget")
@@ -90,7 +92,11 @@ class Incomes(db.Model):
         db.DateTime, nullable=False, default=datetime.now(timezone.utc)
     )
     updated_at = db.Column(db.DateTime)
+    budget_id = db.Column(
+        db.Integer, db.ForeignKey("budgets.budget_id"), nullable=False
+    )
 
+    budget = db.relationship("Budgets", backref="incomes")
     user = db.relationship("Users", backref="incomes")
     category = db.relationship("IncomeCategories", backref="incomes")
 
