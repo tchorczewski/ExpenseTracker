@@ -1,5 +1,4 @@
 import datetime
-
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -47,36 +46,35 @@ def get_users_expenses():
 @expense_bp.route("/add_expense", methods=["POST"])
 @jwt_required()
 def add_expense():
-    if request.method == "POST":
-        user, error_response, status_code = get_auth_user()
-        if error_response:
-            return error_response, status_code
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
 
-        raw_data = request.form.to_dict()
+    raw_data = request.form.to_dict()
 
-        is_valid, error_msg = validation.validate_expense(raw_data)
-        if not is_valid:
-            return jsonify({"message": error_msg}), 400
+    is_valid, error_msg = validation.validate_expense(raw_data)
+    if not is_valid:
+        return jsonify({"message": error_msg}), 400
 
-        data, error_msg = helpers.prepare_expense_data(raw_data, user.user_id)
-        if error_msg:
-            return jsonify({"message": f"Something went wrong {error_msg}"}), 400
+    data, error_msg = helpers.prepare_expense_data(raw_data, user.user_id)
+    if error_msg:
+        return jsonify({"message": f"Something went wrong {error_msg}"}), 400
 
-        expense = Expenses(**data)
-        try:
-            db.session.add(expense)
-            db.session.commit()
-            response = jsonify(expense_mapper(expense))
-            return response, 201
-        except IntegrityError:
-            db.session.rollback()
-            return jsonify({"message": "Database integrity error"}), 400
-        except OperationalError:
-            db.session.rollback()
-            return jsonify({"message": "Database connection issue"}), 500
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({"error": str(e)}), 500
+    expense = Expenses(**data)
+    try:
+        db.session.add(expense)
+        db.session.commit()
+        response = jsonify(expense_mapper(expense))
+        return response, 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"message": "Database integrity error"}), 400
+    except OperationalError:
+        db.session.rollback()
+        return jsonify({"message": "Database connection issue"}), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 @expense_bp.route("/<int:expense_id>/delete_expense", methods=["DELETE"])

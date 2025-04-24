@@ -1,4 +1,6 @@
-from flask import jsonify, request
+from typing import Any
+
+from flask import jsonify, request, Response
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from sqlalchemy import select
@@ -27,7 +29,7 @@ def _get_user_id_from_token():
         return None
 
 
-def get_auth_user():
+def get_auth_user() -> tuple[None, Response, int] | tuple[Any | None, None, int]:
     """
     Gets and verifies the user based on JWT cookies.
     :return: (user, error_response,status_code)
@@ -130,3 +132,15 @@ def verify_budget_change(user_id, date, current_budgets_id):
     if current_budgets_id == edited_budget["budget_id"]:
         return False, None, None
     return True, edited_budget["budget_id"], None
+
+
+def prepare_income_data(data, user_id):
+    data["user_id"] = user_id
+    data["amount"] = float(data.get("budget_amount", "0"))
+    _, budget, error_msg = get_budget_for_user(user_id, data["income_date"][:7])
+    if error_msg:
+        return None, f"Something went wrong {error_msg}"
+    data["budget_id"] = budget.get("budget_id")
+    data["created_at"] = datetime.now().strftime("%Y-%m-%d")
+    data["updated_at"] = None
+    return data
