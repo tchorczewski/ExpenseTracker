@@ -12,6 +12,7 @@ operations_bp = Blueprint("operations", __name__)
 @operations_bp.route("/<int:budget_id>/get_current_budget", methods=["GET"])
 @jwt_required()
 def fetch_budget_summary(budget_id):
+    # Need to check the method of budget generation and adjust the income and expense statements to include/exclude cyclical ones
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code

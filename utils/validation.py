@@ -81,12 +81,15 @@ def validate_expense(data) -> (bool, str):
     return True, None
 
 
-def is_valid_budget_status(budget) -> bool:
+def is_valid_budget_status(status_id) -> bool:
     """
     Verifies if the status of a budget is allowing the attempted operation
     :return: True if operation is permitted on given budget
     """
-    return 1 <= budget.status_id <= 4
+    try:
+        return 1 <= int(status_id) <= 4
+    except (ValueError, TypeError):
+        return False
 
 
 def is_valid_category(cat_id) -> bool:
@@ -207,3 +210,47 @@ def validate_income_edit(data, is_patch=False):
     if errors:
         return False, check_new_budget_id, errors
     return True, check_new_budget_id, errors
+
+
+def validate_budget_edit(data, is_patch=False):
+    required_fields = [
+        "status_id",
+        "budget_amount",
+        "budget_year",
+        "budget_month",
+        "is_generated",
+    ]
+    errors = {}
+
+    unknown_fields = [field for field in data if field not in required_fields]
+    if unknown_fields:
+        errors["unknown_fields"] = f"Fields {unknown_fields} not editable"
+
+    if not is_patch:
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            errors["missing_fields"] = f"Missing required fields {missing_fields}"
+        is_valid, error_msg = validate_budget(data)
+        if not is_valid:
+            errors["Validation"] = error_msg
+
+    if "budget_month" in data:
+        if not is_valid_month(data["budget_month"]):
+            errors["date"] = "Incorrect month format"
+
+    if "budget_amount" in data:
+        if not is_valid_amount(data["budget_amount"]):
+            errors["amount"] = "Incorrect value passed as amount"
+
+    if "budget_year" in data:
+        if not is_valid_year(data["budget_year"]):
+            errors["date"] = (
+                f"Incorrect year, it should be a number between 1922 and {datetime.now().year + 10}"
+            )
+    if "status_id" in data:
+        if not is_valid_budget_status(data["status_id"]):
+            errors["status_id"] = "Editing of budget with this status is not allowed"
+
+    if errors:
+        return False, errors
+    return True, errors
