@@ -3,11 +3,11 @@ from typing import Any
 from flask import jsonify, request, Response
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended.exceptions import NoAuthorizationError
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.exc import OperationalError
 
 from db import db
-from db.models import Users, Budgets
+from db.models import Users, Budgets, Expenses, Incomes
 from datetime import datetime
 
 from utils.mappers import budget_mapper
@@ -90,10 +90,11 @@ def prepare_expense_data(data, user_id) -> (object, str):
     data["user_id"] = int(user_id)
     data["created_at"] = datetime.now().strftime("%Y-%m-%d")
     data["updated_at"] = None
-    _, budget, error_msg = get_budget_for_user(user_id, data["expense_date"][:7])
+    _, budget, error_msg = get_budget_for_user(user_id, data["expense_date"])
     if error_msg:
         return None, f"Something went wrong {error_msg}"
     data["budget_id"] = budget.get("budget_id")
+    data["is_cyclical"] = data["is_cyclical"].lower() == "true"
     return data, None
 
 
@@ -123,7 +124,7 @@ def verify_budget_change(user_id, date, current_budgets_id):
     Method to check if the expense needs to be assigned to a different budget
     :param user_id: Stored in JWT users_id
     :param date: Date that user has passed in request to edit within the expense
-    :param current_budgets_id Id of the budget the user is editing
+    :param current_budgets_id ID of the budget the user is editing
     :return: Tuple (Bool, new_budget_id). new_budget_id will be an id or None
     """
     _, edited_budget, error_msg = get_budget_for_user(user_id, date)
@@ -136,11 +137,47 @@ def verify_budget_change(user_id, date, current_budgets_id):
 
 def prepare_income_data(data, user_id):
     data["user_id"] = user_id
-    data["amount"] = float(data.get("budget_amount", "0"))
-    _, budget, error_msg = get_budget_for_user(user_id, data["income_date"][:7])
+    data["amount"] = float(data.get("amount", "0"))
+    _, budget, error_msg = get_budget_for_user(user_id, data["income_date"])
     if error_msg:
         return None, f"Something went wrong {error_msg}"
     data["budget_id"] = budget.get("budget_id")
     data["created_at"] = datetime.now().strftime("%Y-%m-%d")
     data["updated_at"] = None
-    return data
+    data["is_cyclical"] = data["is_cyclical"].lower() == "true"
+    return data, None
+
+
+def check_budget_generation_status(budget, user, budget_id):
+    if budget.is_generated:
+        expense_stmt = (
+            select(func.sum(Expenses.amount))
+            .join(Users, Expenses.user_id == Users.user_id)
+            .where(Users.user_id == user.user_id)
+            .where(Expenses.budget_id == budget_id)
+            .where(Expenses.is_cyclical == False)
+        )
+        income_stmt = (
+            select(func.sum(Incomes.amount))
+            .join(Users, Incomes.user_id == Users.user_id)
+            .where(Users.user_id == user.user_id)
+            .where(Incomes.budget_id == budget_id)
+            .where(Incomes.is_cyclical == False)
+        )
+    else:
+        expense_stmt = (
+            select(func.sum(Expenses.amount))
+            .join(Users, Expenses.user_id == Users.user_id)
+            .where(Users.user_id == user.user_id)
+            .where(Expenses.budget_id == budget_id)
+            .where(Expenses.is_cyclical == True)
+        )
+        income_stmt = (
+            select(func.sum(Incomes.amount))
+            .join(Users, Incomes.user_id == Users.user_id)
+            .where(Users.user_id == user.user_id)
+            .where(Incomes.budget_id == budget_id)
+            .where(Incomes.is_cyclical == True)
+        )
+
+    return expense_stmt, income_stmt

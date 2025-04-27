@@ -4,7 +4,7 @@ from sqlalchemy.orm import selectinload
 
 from db import db
 from db.models import Budgets, Users, Expenses
-from utils import helpers
+from utils import helpers, validation
 from sqlalchemy.exc import IntegrityError, OperationalError
 from datetime import datetime
 from sqlalchemy import select, Boolean
@@ -150,60 +150,61 @@ def create_budget():
         return jsonify({"error": str(e)}), 500
 
 
-@budget_bp.route("/edit_budget", methods=["PUT"])
+@budget_bp.route("/<int:budget_id>/edit_budget", methods=["PUT", "PATCH"])
 @jwt_required()
-def edit_budget():
+def edit_budget(budget_id):
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
 
-    raw_data = request.form.to_dict()
-    is_valid, error_msg = validate_budget(raw_data)
-    if not is_valid:
-        return jsonify({"message": f"Something went wrong {error_msg}"}), 400
+    budget = db.session.execute(
+        (select(Budgets).where(Budgets.budget_id == budget_id))
+    ).scalar_one_or_none()
 
-    budget, _, error_msg = helpers.get_budget_for_user(
-        user.user_id,
-        helpers.parse_date(raw_data["budget_year"], raw_data["budget_month"]),
-    )
-    if error_msg:
-        return jsonify({"message": f"Something went wrong: {error_msg}"})
-    if not is_valid_budget_status(budget):
+    if not budget:
+        return jsonify({"message": "Budget not found"}), 404
+    if user.user_id != budget.user_id:
         return (
-            jsonify(
-                {
-                    "message": "The operation is not allowed on budgets with statuses 5 and 6"
-                }
-            ),
-            404,
+            jsonify({"message": "Unauthorized"}),
+            403,
         )
-    try:
-        raw_data["budget_amount"] = float(raw_data["budget_amount"])
-    except (ValueError, TypeError):
-        return jsonify({"message": "Incorrect amount format"}), 400
 
+    data = request.form.to_dict()
+    if request.method == "PUT":
+        is_valid, error_msg = validation.validate_budget_edit(data)
+        if not is_valid:
+            return jsonify({"message": error_msg}), 400
+
+    if request.method == "PATCH":
+        is_valid, error_msg = validation.validate_budget_edit(data, is_patch=True)
+        if not is_valid:
+            return jsonify({"message": error_msg}), 400
+
+    for key, value in data.items():
+        if key == "budget_amount":
+            setattr(budget, key, float(value))
+        elif key == "is_generated":
+            setattr(budget, key, data["is_generated"].lower() == "true")
+        else:
+            setattr(budget, key, value)
+
+    budget.updated_at = datetime.now()
     try:
-        budget.budget_amount = raw_data["budget_amount"]
-        budget.updated_at = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
-        return (
-            jsonify(
-                {
-                    "message": "Budget updated successfully",
-                    "budget": helpers.budget_mapper(budget),
-                }
-            ),
-            200,
-        )
-
+        response = {
+            "message": f"Budget {budget.budget_id} successfully updated",
+            "updated_budget": {
+                field: getattr(budget, field)
+                for field in budget.__table__.columns.keys()
+            },
+        }
+        return jsonify(response), 200
     except IntegrityError:
         db.session.rollback()
         return jsonify({"message": "Database integrity error"}), 400
-
     except OperationalError:
         db.session.rollback()
         return jsonify({"message": "Database connection issue"}), 500
-
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500

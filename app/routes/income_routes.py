@@ -60,7 +60,7 @@ def create_income():
 
     data, error_msg = helpers.prepare_income_data(raw_data, user.user_id)
     if error_msg:
-        return jsonify({"message": f"Something went wrong {error_msg}"}), 400
+        return jsonify({"message": f"{error_msg}"}), 400
     income = Incomes(**data)
     try:
         db.session.add(income)
