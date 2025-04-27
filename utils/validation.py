@@ -100,6 +100,14 @@ def is_valid_category(cat_id) -> bool:
         return False
 
 
+def is_valid_budget_category(cat_id):
+    try:
+        cat_id = int(cat_id)
+        return 1 <= cat_id <= 4
+    except (ValueError, TypeError):
+        return False, "An error occurred"
+
+
 def validate_budget(data) -> (bool, str):
     """
     Takes the raw data from requests and checks for required fields that user has to fill and verifies the integrity of the data.
@@ -170,11 +178,11 @@ def validate_income(data):
         return False, f"Incorrect value passed as amount"
     if not is_valid_date(data["income_date"]):
         return False, f"Incorrect date format"
-    try:
-        data["category_id"] = int(data["category_id"])
-        return 1 <= data["category_id"] <= 4
-    except (ValueError, TypeError):
-        return False
+    if not is_valid_budget_category(data["category_id"]):
+        return False, f"Incorrect status"
+    if data["is_cyclical"].lower() not in ["true", "false"]:
+        return False, f"Incorrect cyclical state"
+    return True, None
 
 
 def validate_income_edit(data, is_patch=False):
