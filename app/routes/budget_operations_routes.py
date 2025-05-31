@@ -1,10 +1,11 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
-from sqlalchemy import select, func
-from sqlalchemy.exc import OperationalError, IntegrityError
+from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
 from db import db
-from db.models import Expenses, Users, Incomes, Budgets
-from utils.helpers import get_auth_user, check_budget_generation_status
+from db.models import Users, Budgets
+from app.services.auth_services import get_auth_user
+from app.services.budget_services import check_budget_generation_status
 
 operations_bp = Blueprint("operations", __name__)
 

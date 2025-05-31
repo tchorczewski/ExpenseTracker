@@ -6,8 +6,9 @@ from flask_jwt_extended import (
     get_jwt_identity,
     set_access_cookies,
 )
-
+from . import celery_app
 from db import db
+from .celery_app import celery_init_app
 from .config import Config
 from datetime import timedelta, datetime
 from .routes.auth_routes import auth_bp
@@ -23,6 +24,7 @@ def create_app():
     app.permanent_session_lifetime = timedelta(days=1)
     jwt = JWTManager(app)
     db.init_app(app)
+    celery = celery_init_app(app)
     with app.app_context():
         db.create_all()
     app.register_blueprint(expense_bp, url_prefix="/api/expenses")
@@ -44,4 +46,4 @@ def create_app():
         except (RuntimeError, KeyError):
             return response
 
-    return app
+    return app, celery

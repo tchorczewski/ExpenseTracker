@@ -4,10 +4,13 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError, IntegrityError
+
+from app.services.budget_services import verify_budget_change
+from app.services.income_services import prepare_income_data
 from db import db
 from db.models import Users, Incomes
-from utils import helpers, validation
-from utils.helpers import get_auth_user
+from utils import validation
+from app.services.auth_services import get_auth_user
 from utils.mappers import income_mapper
 from utils.validation import validate_income
 
@@ -58,7 +61,7 @@ def create_income():
     if not is_valid:
         return jsonify({"message": error_msg}), 400
 
-    data, error_msg = helpers.prepare_income_data(raw_data, user.user_id)
+    data, error_msg = prepare_income_data(raw_data, user.user_id)
     if error_msg:
         return jsonify({"message": f"{error_msg}"}), 400
     income = Incomes(**data)
@@ -150,7 +153,7 @@ def edit_income(income_id):
             return jsonify({"message": error_msg}), 400
 
     if check_new_budget_id:
-        status, new_budget_id, error_msg = helpers.verify_budget_change(
+        status, new_budget_id, error_msg = verify_budget_change(
             user.user_id, data["income_date"], income.budget_id
         )
         if error_msg:

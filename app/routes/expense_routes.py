@@ -3,10 +3,14 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy import select
-from utils import validation, helpers
+
+from app.services.budget_services import verify_budget_change
+from app.services.expenses_services import prepare_expense_data
+from utils import validation
 from db.models import Users, Expenses
 from db import db
-from utils.helpers import get_auth_user
+from app.services.auth_services import get_auth_user
+
 from utils.mappers import expense_mapper
 
 expense_bp = Blueprint("expenses", __name__)
@@ -56,7 +60,7 @@ def add_expense():
     if not is_valid:
         return jsonify({"message": error_msg}), 400
 
-    data, error_msg = helpers.prepare_expense_data(raw_data, user.user_id)
+    data, error_msg = prepare_expense_data(raw_data, user.user_id)
     if error_msg:
         return jsonify({"message": f"Something went wrong {error_msg}"}), 400
 
@@ -151,7 +155,7 @@ def edit_expense(expense_id):
             return jsonify({"message": error_msg}), 400
 
     if check_new_budget_id:
-        status, new_budget_id, error_msg = helpers.verify_budget_change(
+        status, new_budget_id, error_msg = verify_budget_change(
             user.user_id, data["expense_date"], expense.budget_id
         )
         if error_msg:
