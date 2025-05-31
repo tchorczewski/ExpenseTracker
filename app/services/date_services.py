@@ -1,9 +1,13 @@
 from datetime import datetime
 
 
-def get_current_date():
+def get_previous_month():
     current_date = datetime.now()
-    return current_date.year, current_date.month
+    previous_month = current_date.month - 1 or 12
+    previous_year = (
+        current_date.year if current_date.month != 1 else current_date.year - 1
+    )
+    return previous_year, previous_month
 
 
 def parse_date(year, month) -> str:
