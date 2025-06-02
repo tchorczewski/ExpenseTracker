@@ -5,7 +5,7 @@ from flask import jsonify, Response
 from db.models import Users
 
 
-def _get_current_user(user_id):
+def _get_current_user(user_id: int):
     """
     :param user_id: User_id taken from JWT Identity
     :return: Returns the result of check if user with such an id exists in the db.

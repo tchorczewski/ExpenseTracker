@@ -8,13 +8,14 @@ from db.models import Budgets, Users, Expenses, Incomes
 from utils.mappers import budget_mapper
 
 
-def get_budget_for_user(user_id, selected_date_str):
+def get_budget_for_user(user_id: int, selected_date_str: str):
     """
     Retrieve the budget for given user and date (format: 'YYYY-MM')
     :param user_id: ID of user stored in JWT
     :param selected_date_str: Passed by the user in the request
     :return: Tuple (Budget object or None, error_message) if no budget found None, if no error, error_message is None
     """
+    # TODO turn this into a separate method in date_services
     try:
         selected_date = datetime.strptime(selected_date_str, "%Y-%m-%d")
     except ValueError:
@@ -38,7 +39,7 @@ def get_budget_for_user(user_id, selected_date_str):
         return None, None, f"Unexpected error {str(e)}"
 
 
-def prepare_budget_data(data, user_id):
+def prepare_budget_data(data: dict, user_id: int):
     data["user_id"] = user_id
     data["budget_amount"] = float(data.get("budget_amount", "0"))
     data["budget_month"] = int(data["budget_month"])

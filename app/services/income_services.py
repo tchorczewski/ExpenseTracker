@@ -1,9 +1,15 @@
 from datetime import datetime
 
+from sqlalchemy import func, select
+from sqlalchemy.exc import OperationalError
+
 from app.services.budget_services import get_budget_for_user
+from db import db
+from db.models import Incomes
+from utils.mappers import income_mapper
 
 
-def prepare_income_data(data, user_id):
+def prepare_income_data(data: dict, user_id: int):
     data["user_id"] = user_id
     data["amount"] = float(data.get("amount", "0"))
     _, budget, error_msg = get_budget_for_user(user_id, data["income_date"])
@@ -14,3 +20,18 @@ def prepare_income_data(data, user_id):
     data["updated_at"] = None
     data["is_cyclical"] = data["is_cyclical"].lower() == "true"
     return data, None
+
+
+def get_cyclical_incomes(budget_id: int):
+    cyclical_expenses_stmt = select(Incomes).filter(
+        Incomes.budget_id == budget_id,
+        Incomes.is_cyclical == True,
+    )
+    try:
+        result = db.session.execute(cyclical_expenses_stmt).scalars().all()
+        incomes_list = [income_mapper(income) for income in result]
+        return incomes_list
+    except OperationalError:
+        return {"message": "Database connection issue"}
+    except Exception as e:
+        return {"error": str(e)}

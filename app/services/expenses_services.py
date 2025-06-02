@@ -1,6 +1,16 @@
-def prepare_expense_data(data, user_id) -> (object, str):
-    """
+from datetime import datetime
 
+from sqlalchemy import select, func
+from sqlalchemy.exc import OperationalError
+
+from app.services.budget_services import get_budget_for_user
+from db import db
+from db.models import Expenses
+from utils.mappers import expense_mapper
+
+
+def prepare_expense_data(data: dict, user_id: int) -> (dict, str):
+    """
     :param data: Dictionary form of data from request
     :param user_id: User_id from jwt identity
     :return: Filled data dictionary and an error message if budget returns nothing
@@ -16,3 +26,18 @@ def prepare_expense_data(data, user_id) -> (object, str):
     data["budget_id"] = budget.get("budget_id")
     data["is_cyclical"] = data["is_cyclical"].lower() == "true"
     return data, None
+
+
+def get_cyclical_expenses(budget_id: int):
+    cyclical_expenses_stmt = select(Expenses.amount).filter(
+        Expenses.budget_id == budget_id,
+        Expenses.is_cyclical == True,
+    )
+    try:
+        result = db.session.execute(cyclical_expenses_stmt).scalars().all()
+        expenses_list = [expense_mapper(expense) for expense in result]
+        return result
+    except OperationalError:
+        return {"message": "Database connection issue"}
+    except Exception as e:
+        return {"error": str(e)}

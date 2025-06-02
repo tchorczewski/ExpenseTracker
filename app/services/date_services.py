@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-def get_previous_month():
+def get_previous_month() -> tuple:
     current_date = datetime.now()
     previous_month = current_date.month - 1 or 12
     previous_year = (
@@ -10,7 +10,7 @@ def get_previous_month():
     return previous_year, previous_month
 
 
-def parse_date(year, month) -> str:
+def parse_date(year: int, month: int) -> str:
     """
     There is no need to validate data as it will be done on an earlier step
     :param year: Year from the request
