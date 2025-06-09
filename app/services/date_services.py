@@ -12,9 +12,8 @@ def get_previous_month() -> tuple:
 
 def parse_date(year: int, month: int) -> str:
     """
-    There is no need to validate data as it will be done on an earlier step
-    :param year: Year from the request
-    :param month: Month from the request
+    :param year: Int value for year
+    :param month: Int value for month
     :return: date in format YYYY-MM
     """
     return f"{year}-{int(month):02d}"

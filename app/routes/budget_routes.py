@@ -131,7 +131,7 @@ def create_budget():
         return jsonify({"message": "Budget already exists"}), 409
 
     budget = Budgets(**data)
-    budget.is_generated = bool(budget.is_generated)  # workaround to be cleaned
+    budget.is_generated = bool(budget.is_generated)  # TODO Clean the workaround
     try:
         db.session.add(budget)
         db.session.commit()
