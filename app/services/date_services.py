@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from dateutil.relativedelta import relativedelta
+
 
 def get_previous_month() -> tuple:
     current_date = datetime.now()
@@ -17,3 +19,7 @@ def parse_date(year: int, month: int) -> str:
     :return: date in format YYYY-MM
     """
     return f"{year}-{int(month):02d}"
+
+
+def set_next_month(date: datetime):
+    return (date + relativedelta(months=1)).strftime("%Y-%m-%d")

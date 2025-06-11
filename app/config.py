@@ -24,7 +24,7 @@ class Config:
         beat_schedule={
             "create_monthly_budget": {
                 "task": "app.tasks.budget_tasks.create_next_month_budget",
-                "schedule": crontab(hour=0, minute=0, day_of_month=1),
+                "schedule": crontab(hour=00, minute=2, day_of_month=12),
             }
         },
     )

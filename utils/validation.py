@@ -1,6 +1,5 @@
 import re
 from datetime import datetime
-from utils.helpers import get_budget_for_user
 
 
 def is_valid_email(email) -> bool:
