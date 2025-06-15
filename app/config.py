@@ -1,6 +1,7 @@
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
+from celery.schedules import crontab
 
 load_dotenv()
 
@@ -13,4 +14,17 @@ class Config:
     JWT_TOKEN_LOCATION = ["cookies"]
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(
         seconds=int(os.getenv("JWT_EXPIRY_SECONDS", 3600))
+    )
+    CELERY = dict(
+        broker_url=os.getenv("BROKER_URL", "redis://redis:6379/0"),
+        result_backend=os.getenv("RESULT_BACKEND", "redis://redis:6379/0"),
+        task_ignore_result=True,
+        task_always_eager=True,
+        task_eager_propagates=True,
+        beat_schedule={
+            "create_monthly_budget": {
+                "task": "app.tasks.budget_tasks.create_next_month_budget",
+                "schedule": crontab(hour=00, minute=2, day_of_month=12),
+            }
+        },
     )
