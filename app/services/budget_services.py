@@ -6,6 +6,7 @@ from sqlalchemy.exc import OperationalError
 from db import db
 from db.models import Budgets, Users, Expenses, Incomes
 from utils.mappers import budget_mapper
+from utils.validation import is_valid_date
 
 
 def get_budget_for_user(user_id: int, selected_date_str: str):
@@ -15,16 +16,15 @@ def get_budget_for_user(user_id: int, selected_date_str: str):
     :param selected_date_str: Passed by the user in the request
     :return: Tuple (Budget object or None, error_message) if no budget found None, if no error, error_message is None
     """
-    # TODO turn this into a separate method in date_services
-    try:
-        selected_date = datetime.strptime(selected_date_str, "%Y-%m-%d")
-    except ValueError:
+
+    if not is_valid_date(selected_date_str):
         return None, None, "Invalid date format. Expected YYYY-MM-DD"
+
+    selected_date = datetime.strptime(selected_date_str, "%Y-%m-%d")
 
     stmt = (
         select(Budgets)
-        .join(Users, Budgets.user_id == Users.user_id)
-        .filter(Users.user_id == user_id)
+        .filter(Budgets.user_id == user_id)
         .filter(Budgets.budget_month == selected_date.month)
         .filter(Budgets.budget_year == selected_date.year)
     )

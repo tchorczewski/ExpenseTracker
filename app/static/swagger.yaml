@@ -1,0 +1,204 @@
+openapi: 3.0.3
+info:
+  title: ExpenseTracker API
+  description: API documentation for the ExpenseTracker backend.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+    description: Local dev server
+tags:
+  - name: Auth
+  - name: Users
+  - name: Budgets
+  - name: Expenses
+  - name: Tasks
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+              required: [username, email, password]
+      responses:
+        '201':
+          description: User created
+        '400':
+          description: Validation error
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and receive JWT cookies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+              required: [email, password]
+      responses:
+        '200':
+          description: Login successful
+        '401':
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Log out (clear JWT cookies)
+      responses:
+        '200':
+          description: Logged out
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  username: { type: string }
+                  email: { type: string }
+
+  /budgets:
+    get:
+      tags: [Budgets]
+      summary: List budgets
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of budgets
+    post:
+      tags: [Budgets]
+      summary: Create a new budget
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                limit: { type: number, format: float }
+              required: [name, limit]
+      responses:
+        '201':
+          description: Budget created
+
+  /budgets/{budget_id}:
+    get:
+      tags: [Budgets]
+      summary: Get budget by ID
+      parameters:
+        - in: path
+          name: budget_id
+          schema: { type: integer }
+          required: true
+      responses:
+        '200':
+          description: Budget details
+    delete:
+      tags: [Budgets]
+      summary: Delete budget
+      parameters:
+        - in: path
+          name: budget_id
+          schema: { type: integer }
+          required: true
+      responses:
+        '204':
+          description: Deleted
+
+  /expenses:
+    get:
+      tags: [Expenses]
+      summary: List expenses
+      parameters:
+        - in: query
+          name: budget_id
+          schema: { type: integer }
+          required: false
+      responses:
+        '200':
+          description: List of expenses
+    post:
+      tags: [Expenses]
+      summary: Create a new expense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                budget_id: { type: integer }
+                description: { type: string }
+                amount: { type: number, format: float }
+                date: { type: string, format: date-time }
+              required: [budget_id, description, amount]
+      responses:
+        '201':
+          description: Expense created
+
+  /expenses/{expense_id}:
+    get:
+      tags: [Expenses]
+      summary: Get expense by ID
+      parameters:
+        - in: path
+          name: expense_id
+          schema: { type: integer }
+          required: true
+      responses:
+        '200':
+          description: Expense details
+    delete:
+      tags: [Expenses]
+      summary: Delete expense
+      parameters:
+        - in: path
+          name: expense_id
+          schema: { type: integer }
+          required: true
+      responses:
+        '204':
+          description: Deleted
+
+  /tasks/send-summary:
+    post:
+      tags: [Tasks]
+      summary: Trigger weekly summary email task
+      responses:
+        '202':
+          description: Task queued
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token_cookie
