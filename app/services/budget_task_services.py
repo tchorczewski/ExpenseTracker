@@ -75,7 +75,7 @@ def clone_budget(
 
 def push_data(
     data: list[Budgets | Incomes | Expenses],
-):  # TODO Logging, figure out a way to push list of lists
+):
     try:
         db.session.add_all(data)
         db.session.commit()
@@ -97,32 +97,54 @@ def push_data(
 def clone_incomes(
     budget_id, incomes: list[Incomes], exclude_fields=("budget_id", "updated_at")
 ):
-    for i, income in enumerate(incomes):
-        mapper = inspect(Incomes)
-        data = {
-            column.key: getattr(income, column.key)
-            for column in mapper.column_attrs
-            if column.key not in exclude_fields
-        }
-        data["budget_id"] = budget_id
-        data["income_date"] = set_next_month(income.income_date)
-        incomes[i] = Incomes(**data)
-
+    incomes = [
+        Incomes(
+            **{
+                **{
+                    column.key: getattr(income, column.key)
+                    for column in inspect(Incomes).column_attrs
+                    if column.key not in exclude_fields
+                },
+                "budget_id": budget_id,
+                "income_date": set_next_month(income.income_date),
+            }
+        )
+        for income in incomes
+    ]
     return incomes
 
 
-def clone_expenses(
-    budget_id, expenses: list[Expenses], exclude_fields=("budget_id", "updated_at")
+def income_cloning(
+    budget_id, income, exclude_fields=("budget_id", "updated_at", "created_at")
 ):
-    for i, expense in enumerate(expenses):
-        mapper = inspect(Expenses)
-        data = {
-            column.key: getattr(expense, column.key)
-            for column in mapper.column_attrs
-            if column.key not in exclude_fields
-        }
-        data["budget_id"] = budget_id
-        data["expense_date"] = set_next_month(expense.expense_date)
-        expenses[i] = Expenses(**data)
+    mapper = inspect(Incomes)
+    data = {
+        column.key: getattr(income, column.key)
+        for column in mapper.column_attrs
+        if column.key not in exclude_fields
+    }
+    data["budget_id"] = budget_id
+    data["income_date"] = set_next_month(income.income_date)
+    return
 
+
+def clone_expenses(
+    budget_id,
+    expenses: list[Expenses],
+    exclude_fields=("budget_id", "updated_at", "created_at"),
+):
+    expenses = [
+        Expenses(
+            **{
+                **{
+                    column.key: getattr(expense, column.key)
+                    for column in inspect(Expenses).column_attrs
+                    if column.key not in exclude_fields
+                },
+                "budget_id": budget_id,
+                "expense_date": set_next_month(expense.expense_date),
+            }
+        )
+        for expense in expenses
+    ]
     return expenses

@@ -21,10 +21,11 @@ class Config:
         task_ignore_result=True,
         task_always_eager=True,
         task_eager_propagates=True,
+        timezone="Europe/Warsaw",
         beat_schedule={
             "create_monthly_budget": {
                 "task": "app.tasks.budget_tasks.create_next_month_budget",
-                "schedule": crontab(hour=00, minute=2, day_of_month=12),
+                "schedule": crontab(hour=15, minute=33, day_of_month=14),
             }
         },
     )
