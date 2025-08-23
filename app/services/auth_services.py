@@ -1,7 +1,8 @@
 from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended.exceptions import NoAuthorizationError
 from typing import Any
 from flask import jsonify, Response
+
+from app.common.decorators import error_handler
 from db.models import Users
 
 
@@ -14,11 +15,9 @@ def _get_current_user(user_id: int):
     return user
 
 
+@error_handler
 def _get_user_id_from_token():
-    try:
-        return get_jwt_identity()
-    except NoAuthorizationError:
-        return None
+    return get_jwt_identity()
 
 
 def get_auth_user() -> tuple[None, Response, int] | tuple[Any | None, None, int]:

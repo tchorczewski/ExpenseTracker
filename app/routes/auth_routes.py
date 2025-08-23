@@ -6,10 +6,10 @@ from flask_jwt_extended import (
     jwt_required,
     unset_jwt_cookies,
 )
+
+from app.common.decorators import error_handler
 from db.models import Users
 from db import db
-from sqlalchemy.exc import IntegrityError, OperationalError
-
 from utils.validation import is_valid_email, is_valid_password
 
 auth_bp = Blueprint("auth", __name__)
@@ -43,6 +43,7 @@ def verify_user(username, password):
 
 
 @auth_bp.route("/register", methods=["POST"])
+@error_handler
 def register_user():
     password = request.form["password"]
 
@@ -68,32 +69,22 @@ def register_user():
         user_role_id=2,
     )
 
-    try:
-        db.session.add(user)
-        db.session.commit()
-        return (
-            jsonify(
-                {
-                    "user_id": user.user_id,
-                    "username": user.username,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "status_id": user.user_status_id,
-                    "role_id": user.user_role_id,
-                }
-            ),
-            201,
-        )
-    except IntegrityError:
-        db.session.rollback()
-        return jsonify({"message": "Database integrity error"}), 400
-    except OperationalError:
-        db.session.rollback()
-        return jsonify({"message": "Database connection issue"}), 500
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+    db.session.add(user)
+    db.session.commit()
+    return (
+        jsonify(
+            {
+                "user_id": user.user_id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "status_id": user.user_status_id,
+                "role_id": user.user_role_id,
+            }
+        ),
+        201,
+    )
 
 
 @auth_bp.route("/logout")
