@@ -8,6 +8,7 @@ from flask_jwt_extended import (
 )
 
 from app.common.decorators import error_handler
+from app.services.auth_services import verify_user
 from db.models import Users
 from db import db
 from utils.validation import is_valid_email, is_valid_password
@@ -26,20 +27,6 @@ def login_user():
         set_access_cookies(response, access_token)
         return response, 200
     return {"message": "Invalid username or password"}, 401
-
-
-def verify_user(username, password):
-    user = Users.query.filter_by(username=username).first_or_404()
-    status = bcrypt.checkpw(
-        password.encode("utf-8"),
-        user.user_password,
-    )
-    if status:
-        return (
-            status,
-            user.user_id,
-        )
-    return False, None
 
 
 @auth_bp.route("/register", methods=["POST"])
@@ -88,7 +75,6 @@ def register_user():
 
 
 @auth_bp.route("/logout")
-@jwt_required()
 def logout():
     response = jsonify({"message": "Logout successful"})
     unset_jwt_cookies(response)

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <!-- Charts -->
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Expenses Over Time</h5>
+        <canvas id="lineChart" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">This Month’s Spending</h5>
+        <canvas id="pieChart" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Operations -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="card-title">5 Most Recent Operations</h5>
+    <table class="table table-striped" id="operationsTable">
+      <thead>
+        <tr><th>Date</th><th>Description</th><th>Amount</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Logout button -->
+<button id="logoutBtn"
+        class="btn btn-outline-danger position-fixed m-3"
+        style="bottom: 0; left: 0; z-index: 1050;">
+  Logout
+</button>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Handle logout
+document.getElementById("logoutBtn").addEventListener("click", async function() {
+  try {
+    const response = await fetch("{{ url_for('auth.logout') }}", {
+      method: "POST",
+      credentials: "include" // ensures JWT cookies are sent so backend can unset
+    });
+
+    if (response.ok) {
+      window.location.href = "{{ url_for('main.login_page') }}";
+    } else {
+      alert("Logout failed, please try again.");
+    }
+  } catch (err) {
+    alert("An error occurred while logging out.");
+  }
+});
+
+  // Fetch operations
+  fetch("/api/operations/recent")
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#operationsTable tbody");
+      tbody.innerHTML = data.map(op => `
+        <tr>
+          <td>${op.date}</td>
+          <td>${op.desc}</td>
+          <td class="${op.amount > 0 ? 'text-success' : 'text-danger'}">
+            ${op.amount > 0 ? '+' : ''}${op.amount}
+          </td>
+        </tr>`).join("");
+    });
+
+  // Fetch pie chart data
+  fetch("/api/summary/monthly")
+    .then(res => res.json())
+    .then(data => {
+      new Chart(document.getElementById("pieChart"), {
+        type: "pie",
+        data: {
+          labels: data.categories,
+          datasets: [{
+            data: data.values,
+            backgroundColor: ["#007bff", "#28a745", "#ffc107", "#dc3545"]
+          }]
+        }
+      });
+    });
+
+  // Example line chart (dummy for now)
+  new Chart(document.getElementById("lineChart"), {
+    type: "line",
+    data: {
+      labels: ["Sep 1", "Sep 2", "Sep 3", "Sep 4", "Sep 5"],
+      datasets: [{
+        label: "Expenses",
+        data: [2000, -120, -800, -40, 300],
+        borderColor: "#007bff",
+        fill: false
+      }]
+    }
+  });
+</script>
+{% endblock %}

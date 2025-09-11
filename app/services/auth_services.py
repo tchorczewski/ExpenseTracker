@@ -1,3 +1,4 @@
+import bcrypt
 from flask_jwt_extended import get_jwt_identity
 from typing import Any
 from flask import jsonify, Response
@@ -32,3 +33,17 @@ def get_auth_user() -> tuple[None, Response, int] | tuple[Any | None, None, int]
     if not user:
         return None, jsonify({"message": "User not found"}), 404
     return user, None, 200
+
+
+def verify_user(username, password):
+    user = Users.query.filter_by(username=username).first_or_404()
+    status = bcrypt.checkpw(
+        password.encode("utf-8"),
+        user.user_password,
+    )
+    if status:
+        return (
+            status,
+            user.user_id,
+        )
+    return False, None

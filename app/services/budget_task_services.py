@@ -47,6 +47,11 @@ def get_cyclical_data(budget_id: int) -> tuple:
 
 
 def calculate_budget_amount(incomes: list, expenses: list) -> float:
+    """
+    :param incomes: Incomes for given budget
+    :param expenses: Expenses for given budget
+    :return: Sum of incomes and expenses
+    """
     return sum(item.get("amount", 0) for item in incomes) - sum(
         item.get("amount", 0) for item in expenses
     )
