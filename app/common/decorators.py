@@ -17,7 +17,7 @@ logging.basicConfig(
 
 @singledispatch
 def handle_error(exc: Exception):
-    db.rollback()
+    db.session.rollback()
     logger.error(f"Unexpected error: {exc}")
     return jsonify({"error": f"Internal server error {exc}"}), 500
 

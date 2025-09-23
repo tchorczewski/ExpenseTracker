@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Budgets - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4>Budgets</h4>
+  <button class="btn btn-primary">+ Add Budget</button>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <table class="table table-hover" id="budgetsTable">
+      <thead>
+        <tr>
+          <th>Budget month</th>
+          <th>Budget year</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Filled by JS -->
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Fetch budgets
+  fetch("/api/budgets")
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#budgetsTable tbody");
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" class="text-center text-muted">No budgets yet</td>
+          </tr>`;
+      } else {
+        tbody.innerHTML = data.map(budget => `
+          <tr onclick="openBudget(${budget.id})" style="cursor:pointer">
+            <td>${budget.month}</td>
+            <td>${budget.year}</td>
+            <td>${budget.amount}</td>
+          </tr>`).join("");
+      }
+    });
+
+  // Row click → go to operations page
+  function openBudget(id) {
+    window.location.href = "/operations?budget_id=" + id;
+  }
+</script>
+{% endblock %}
