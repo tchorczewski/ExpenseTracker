@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
-from sqlalchemy import select, union, union_all
+from sqlalchemy import select, union_all
 from app.common.decorators import error_handler
 from app.services.auth_services import get_auth_user
 from db import db
@@ -52,7 +52,31 @@ def get_last_operations():
     result = db.session.execute(last_operations_stmt).all()
 
     if not result:
-        return None, 201
+        return [], 201
 
     result_list = [last_operations_mapper(item) for item in result]
     return result_list, 201
+
+
+@dashboard_bp.route("/plot_budget", methods=["GET"])
+@error_handler
+@jwt_required()
+def plot_budget():
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
+    data = {
+        "Type": ["Rent", "Groceries", "Transport", "Entertainment", "Savings"],
+        "Amount": [1200, 450, 150, 200, 500],
+    }
+    return jsonify(data) , 201
+
+
+@dashboard_bp.route("/plot_expenses", methods=["GET"])
+@error_handler
+@jwt_required()
+def plot_expenses():
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
+    pass
