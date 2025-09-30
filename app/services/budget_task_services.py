@@ -81,6 +81,19 @@ def push_data(
     db.session.add_all(data)
     db.session.commit()
     return True
+    try:
+        db.session.add_all(data)
+        db.session.commit()
+        return True
+    except IntegrityError:
+        db.session.rollback()
+        return None
+    except OperationalError:
+        db.session.rollback()
+        return None
+    except Exception as e:
+        db.session.rollback()
+        return None
 
 
 # TODO Create abstract method to clone incomes/expenses
@@ -118,7 +131,6 @@ def income_cloning(
     data["budget_id"] = budget_id
     data["income_date"] = set_next_month(income.income_date)
     return
-
 
 def clone_expenses(
     budget_id,

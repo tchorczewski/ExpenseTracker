@@ -1,6 +1,6 @@
 from os import getenv
-
 from flask import Flask, url_for, redirect
+from flask import Flask
 from flask_jwt_extended import (
     JWTManager,
     get_jwt,
@@ -20,7 +20,9 @@ from .routes.dashboard_routes import dashboard_bp
 from .routes.expense_routes import expense_bp
 from .routes.income_routes import income_bp
 from .routes.swagger import swagger_bp
+
 from .routes.ui_routes import main_bp
+
 
 
 def create_app():
@@ -39,6 +41,7 @@ def create_app():
     app.register_blueprint(income_bp, url_prefix="/api/incomes")
     app.register_blueprint(operations_bp, url_prefix="/api/operations")
     app.register_blueprint(swagger_bp, prefix=getenv("SWAGGER_URL"))
+
     app.register_blueprint(dashboard_bp, url_prefix="/api/dashboard")
 
     @jwt.unauthorized_loader
