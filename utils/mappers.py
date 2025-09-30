@@ -44,3 +44,12 @@ def income_mapper(income):
             income.updated_at.strftime("%Y-%m-%d") if income.updated_at else None
         ),
     }
+
+
+def last_operations_mapper(last_operations):
+    return {
+        "type": f"{'Expense' if last_operations.category_name in {'Housing', 'Transportation','Food & Groceries', "Entertainment", "Healthcare" } else 'Income'}",
+        "amount": last_operations.amount,
+        "date": last_operations.date.strftime("%Y-%m-%d"),
+        "category_name": last_operations.category_name,
+    }

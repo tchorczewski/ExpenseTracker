@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import select, func
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import select
 
+from app.common.decorators import error_handler
 from app.services.budget_services import get_budget_for_user
 from db import db
 from db.models import Expenses
@@ -28,16 +28,11 @@ def prepare_expense_data(data: dict, user_id: int) -> (dict, str):
     return data, None
 
 
+@error_handler
 def get_cyclical_expenses(budget_id: int):
     cyclical_expenses_stmt = select(Expenses.amount).filter(
         Expenses.budget_id == budget_id,
         Expenses.is_cyclical == True,
     )
-    try:
-        result = db.session.execute(cyclical_expenses_stmt).scalars().all()
-        expenses_list = [expense_mapper(expense) for expense in result]
-        return result
-    except OperationalError:
-        return {"message": "Database connection issue"}
-    except Exception as e:
-        return {"error": str(e)}
+    result = db.session.execute(cyclical_expenses_stmt).scalars().all()
+    return result

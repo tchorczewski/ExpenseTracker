@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 
+from app.common.decorators import error_handler
 from app.services.budget_services import get_budget_for_user
 from db import db
 from db.models import Incomes
@@ -22,16 +23,12 @@ def prepare_income_data(data: dict, user_id: int):
     return data, None
 
 
+@error_handler
 def get_cyclical_incomes(budget_id: int):
     cyclical_expenses_stmt = select(Incomes).filter(
         Incomes.budget_id == budget_id,
         Incomes.is_cyclical == True,
     )
-    try:
-        result = db.session.execute(cyclical_expenses_stmt).scalars().all()
-        incomes_list = [income_mapper(income) for income in result]
-        return incomes_list
-    except OperationalError:
-        return {"message": "Database connection issue"}
-    except Exception as e:
-        return {"error": str(e)}
+    result = db.session.execute(cyclical_expenses_stmt).scalars().all()
+    incomes_list = [income_mapper(income) for income in result]
+    return incomes_list

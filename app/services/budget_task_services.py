@@ -5,6 +5,7 @@ from sqlalchemy import select, func, not_
 from sqlalchemy.exc import OperationalError, IntegrityError
 from sqlalchemy.inspection import inspect
 
+from app.common.decorators import error_handler
 from app.services.expenses_services import get_cyclical_expenses
 from app.services.income_services import get_cyclical_incomes
 from db import db
@@ -13,6 +14,7 @@ from db.models import Budgets, Users, Incomes, Expenses
 from concurrent.futures import ThreadPoolExecutor
 
 
+@error_handler
 def get_users_with_missing_budget() -> dict[str, str] | set[Any]:
     previous_year, previous_month = get_previous_month()
     current_year, current_month = datetime.now().year, datetime.now().month
@@ -25,13 +27,7 @@ def get_users_with_missing_budget() -> dict[str, str] | set[Any]:
         Budgets.budget_month == previous_month,
         not_(Budgets.user_id.in_(current_month_subq)),
     )
-    try:
-        return set(db.session.execute(missing_budget_users_stmt).scalars().all())
-    except OperationalError:
-        # TODO Standardize returns, add logging, create something to avoid multiple if none checks (decorator maybe?)
-        return {"message": "Database connection issue"}
-    except Exception as e:
-        return {"error": str(e)}
+    return set(db.session.execute(missing_budget_users_stmt).scalars().all())
 
 
 def get_cyclical_data(budget_id: int) -> tuple:
@@ -51,6 +47,11 @@ def get_cyclical_data(budget_id: int) -> tuple:
 
 
 def calculate_budget_amount(incomes: list, expenses: list) -> float:
+    """
+    :param incomes: Incomes for given budget
+    :param expenses: Expenses for given budget
+    :return: Sum of incomes and expenses
+    """
     return sum(item.get("amount", 0) for item in incomes) - sum(
         item.get("amount", 0) for item in expenses
     )
@@ -73,9 +74,13 @@ def clone_budget(
     return Budgets(**data)
 
 
+@error_handler
 def push_data(
     data: list[Budgets | Incomes | Expenses],
 ):
+    db.session.add_all(data)
+    db.session.commit()
+    return True
     try:
         db.session.add_all(data)
         db.session.commit()
@@ -126,7 +131,6 @@ def income_cloning(
     data["budget_id"] = budget_id
     data["income_date"] = set_next_month(income.income_date)
     return
-
 
 def clone_expenses(
     budget_id,

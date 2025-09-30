@@ -1,14 +1,14 @@
 from datetime import datetime
 
 from sqlalchemy import select, func
-from sqlalchemy.exc import OperationalError
-
+from app.common.decorators import error_handler
 from db import db
 from db.models import Budgets, Users, Expenses, Incomes
 from utils.mappers import budget_mapper
 from utils.validation import is_valid_date
 
 
+@error_handler
 def get_budget_for_user(user_id: int, selected_date_str: str):
     """
     Retrieve the budget for given user and date (format: 'YYYY-MM')
@@ -28,15 +28,10 @@ def get_budget_for_user(user_id: int, selected_date_str: str):
         .filter(Budgets.budget_month == selected_date.month)
         .filter(Budgets.budget_year == selected_date.year)
     )
-    try:
-        result = db.session.execute(stmt).scalar_one_or_none()
-        if not result:
-            return None, None, "No budget for selected period"
-        return result, budget_mapper(result), None
-    except OperationalError:
-        return None, None, "Connection error"
-    except Exception as e:
-        return None, None, f"Unexpected error {str(e)}"
+    result = db.session.execute(stmt).scalar_one_or_none()
+    if not result:
+        return None, None, "No budget for selected period"
+    return result, budget_mapper(result), None
 
 
 def prepare_budget_data(data: dict, user_id: int):
