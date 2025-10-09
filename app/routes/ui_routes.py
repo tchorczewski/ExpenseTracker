@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, redirect, url_for
 from flask_jwt_extended import jwt_required
 
 main_bp = Blueprint("main", __name__)
@@ -20,13 +20,16 @@ def dashboard():
     return render_template("dashboard.html")
 
 
-@main_bp.route("/budget")
+@main_bp.route("/budgets")
 @jwt_required()
 def budget():
-    return render_template("budget.html")
+    return render_template("budgets.html")
 
 
-@main_bp.route("/history")
+@main_bp.route("/operations")
 @jwt_required()
-def history():
-    return render_template("history.html")
+def operations():
+    budget_id = request.args.get("budget_id")
+    if not budget_id:
+        return redirect(url_for("main.dashboard"))
+    return render_template("operations.html")

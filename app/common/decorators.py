@@ -1,5 +1,7 @@
 import functools
 import logging
+import traceback
+
 from flask import jsonify
 from functools import singledispatch
 from db import db
@@ -9,7 +11,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(
     filename="ErrorLog.log",
     encoding="utf-8",
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s %(message)s",
     datefmt="%d/%m/%Y %H:%M:%S ",
 )
@@ -18,7 +20,7 @@ logging.basicConfig(
 @singledispatch
 def handle_error(exc: Exception):
     db.session.rollback()
-    logger.error(f"Unexpected error: {exc}")
+    logger.error(f"Unexpected error: {traceback.format_exc()}")
     return jsonify({"error": f"Internal server error {exc}"}), 500
 
 

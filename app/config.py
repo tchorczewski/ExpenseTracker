@@ -15,6 +15,8 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(
         seconds=int(os.getenv("JWT_EXPIRY_SECONDS", 3600))
     )
+    JWT_CSRF_IN_COOKIES = False
+    JWT_COOKIE_CSRF_PROTECT = False
     CELERY = dict(
         broker_url=os.getenv("BROKER_URL", "redis://redis:6379/0"),
         result_backend=os.getenv("RESULT_BACKEND", "redis://redis:6379/0"),

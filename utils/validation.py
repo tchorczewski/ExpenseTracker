@@ -107,7 +107,7 @@ def is_valid_budget_category(cat_id):
         return False, "An error occurred"
 
 
-def validate_budget(data) -> (bool, str):
+def validate_budget(data):
     """
     Takes the raw data from requests and checks for required fields that user has to fill and verifies the integrity of the data.
     :param data: Raw data from the API request
@@ -219,45 +219,25 @@ def validate_income_edit(data, is_patch=False):
     return True, check_new_budget_id, errors
 
 
-def validate_budget_edit(data, is_patch=False):
-    required_fields = [
-        "status_id",
-        "budget_amount",
-        "budget_year",
-        "budget_month",
-        "is_generated",
-    ]
+def validate_budget_edit(data):
+    editable_fields = {"status_id", "budget_amount", "budget_year", "budget_month"}
     errors = {}
 
-    unknown_fields = [field for field in data if field not in required_fields]
+    unknown_fields = [f for f in data if f not in editable_fields]
     if unknown_fields:
         errors["unknown_fields"] = f"Fields {unknown_fields} not editable"
 
-    if not is_patch:
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            errors["missing_fields"] = f"Missing required fields {missing_fields}"
-        is_valid, error_msg = validate_budget(data)
-        if not is_valid:
-            errors["Validation"] = error_msg
-
-    if "budget_month" in data:
-        if not is_valid_month(data["budget_month"]):
-            errors["date"] = "Incorrect month format"
-
-    if "budget_amount" in data:
-        if not is_valid_amount(data["budget_amount"]):
-            errors["amount"] = "Incorrect value passed as amount"
-
-    if "budget_year" in data:
-        if not is_valid_year(data["budget_year"]):
-            errors["date"] = (
-                f"Incorrect year, it should be a number between 1922 and {datetime.now().year + 10}"
-            )
-    if "status_id" in data:
-        if not is_valid_budget_status(data["status_id"]):
-            errors["status_id"] = "Editing of budget with this status is not allowed"
+    if "budget_amount" in data and not is_valid_amount(data["budget_amount"]):
+        errors["amount"] = "Incorrect amount format"
+    if "budget_month" in data and not is_valid_month(data["budget_month"]):
+        errors["month"] = "Invalid month"
+    if "budget_year" in data and not is_valid_year(data["budget_year"]):
+        errors["year"] = (
+            f"Invalid year (should be between 1922 and {datetime.now().year + 10})"
+        )
+    if "status_id" in data and not is_valid_budget_status(data["status_id"]):
+        errors["status"] = "Invalid or locked status"
 
     if errors:
         return False, errors
-    return True, errors
+    return True, {}

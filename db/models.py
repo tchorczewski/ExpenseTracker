@@ -9,7 +9,6 @@ class Expenses(db.Model):
         db.Integer, db.ForeignKey("expense_categories.category_id"), nullable=False
     )
     amount = db.Column(db.Numeric(12, 2), nullable=False)
-    description = db.Column(db.String(500))
     expense_date = db.Column(db.Date, nullable=False, default=date.today)
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
     created_at = db.Column(

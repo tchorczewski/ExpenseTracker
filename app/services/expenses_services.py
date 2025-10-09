@@ -16,7 +16,6 @@ def prepare_expense_data(data: dict, user_id: int) -> (dict, str):
     :return: Filled data dictionary and an error message if budget returns nothing
     """
     data["amount"] = float(data.get("amount", "0"))
-    data["description"] = data.get("description", "None")
     data["user_id"] = int(user_id)
     data["created_at"] = datetime.now().strftime("%Y-%m-%d")
     data["updated_at"] = None

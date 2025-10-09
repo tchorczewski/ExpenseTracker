@@ -1,4 +1,4 @@
-def budget_mapper(budget):
+def budget_mapper(budget, budget_status="Active"):
     return {
         "budget_id": budget.budget_id,
         "user_id": budget.user_id,
@@ -6,6 +6,7 @@ def budget_mapper(budget):
         "budget_year": budget.budget_year,
         "budget_amount": budget.budget_amount,
         "status_id": budget.status_id,
+        "status_name": budget_status,
         "is_generated": budget.is_generated,
         "created_at": budget.created_at.strftime("%Y-%m-%d"),
         "updated_at": (
@@ -14,12 +15,11 @@ def budget_mapper(budget):
     }
 
 
-def expense_mapper(expense):
+def expense_mapper(expense, category):
     return {
         "expense_id": expense.expense_id,
-        "category_id": expense.category_id,
+        "category_name": category,
         "amount": expense.amount,
-        "description": expense.description,
         "user_id": expense.user_id,
         "expense_date": expense.expense_date.strftime("%Y-%m-%d"),
         "created_at": expense.created_at.strftime("%Y-%m-%d"),
@@ -30,11 +30,11 @@ def expense_mapper(expense):
     }
 
 
-def income_mapper(income):
+def income_mapper(income, category):
     return {
         "income_id": income.income_id,
         "user_id": income.user_id,
-        "category_id": income.category_id,
+        "category_name": category,
         "amount": income.amount,
         "income_date": income.income_date.strftime("%Y-%m-%d"),
         "is_cyclical": income.is_cyclical,
@@ -53,3 +53,7 @@ def last_operations_mapper(last_operations):
         "date": last_operations.date.strftime("%Y-%m-%d"),
         "category_name": last_operations.category_name,
     }
+
+
+def status_mapper(status):
+    return {"id": status.status_id, "name": status.status_name}

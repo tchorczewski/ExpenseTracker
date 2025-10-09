@@ -25,15 +25,10 @@ def get_users_expenses():
     if error_response:
         return error_response, status_code
 
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 10, type=int)
-
     stmt = (
         select(Expenses)
         .join(Users, Expenses.user_id == Users.user_id)
         .filter(Users.user_id == user.user_id)
-        .limit(per_page)
-        .offset((page - 1) * per_page)
     )
     expenses = db.session.execute(stmt).scalars().all()
 

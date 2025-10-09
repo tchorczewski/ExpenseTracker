@@ -1,7 +1,6 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
 from sqlalchemy import select
-from sqlalchemy.exc import OperationalError
 
 from app.common.decorators import error_handler
 from db import db

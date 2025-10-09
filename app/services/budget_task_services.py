@@ -81,19 +81,6 @@ def push_data(
     db.session.add_all(data)
     db.session.commit()
     return True
-    try:
-        db.session.add_all(data)
-        db.session.commit()
-        return True
-    except IntegrityError:
-        db.session.rollback()
-        return None
-    except OperationalError:
-        db.session.rollback()
-        return None
-    except Exception as e:
-        db.session.rollback()
-        return None
 
 
 # TODO Create abstract method to clone incomes/expenses
@@ -119,19 +106,6 @@ def clone_incomes(
     return incomes
 
 
-def income_cloning(
-    budget_id, income, exclude_fields=("budget_id", "updated_at", "created_at")
-):
-    mapper = inspect(Incomes)
-    data = {
-        column.key: getattr(income, column.key)
-        for column in mapper.column_attrs
-        if column.key not in exclude_fields
-    }
-    data["budget_id"] = budget_id
-    data["income_date"] = set_next_month(income.income_date)
-    return
-
 def clone_expenses(
     budget_id,
     expenses: list[Expenses],
@@ -152,3 +126,15 @@ def clone_expenses(
         for expense in expenses
     ]
     return expenses
+
+
+def get_curr_month_budget_details():
+    # TODO
+    """
+    select budgets.budget_id, budgets.budget_month,
+    (select SUM(incomes.amount) from incomes WHERE incomes.budget_id = budgets.budget_id
+    AND incomes.is_cyclical) as incomes_sum,
+    (select SUM(expenses.amount) from expenses WHERE expenses.budget_id = budgets.budget_id
+    AND expenses.is_cyclical) as expenses_sum From budgets WHERE budgets.budget_month = 9 AND budgets.budget_year = 2025
+    """
+    pass
