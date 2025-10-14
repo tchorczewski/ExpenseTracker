@@ -15,7 +15,6 @@ from utils import validation
 from datetime import datetime
 from sqlalchemy import select, update
 from app.services.budget_services import get_budget_for_user, prepare_budget_data
-from app.services.date_services import parse_date
 from app.services.auth_services import get_auth_user
 from utils.mappers import budget_mapper, expense_mapper, income_mapper, status_mapper
 from utils.validation import validate_budget
@@ -102,8 +101,8 @@ def get_budget_details(budget_id):
         )
     )
 
-    expenses = db.session.execute(expense_stmt).scalars().all()
-    incomes = db.session.execute(incomes_stmt).scalars().all()
+    expenses = db.session.execute(expense_stmt).all()
+    incomes = db.session.execute(incomes_stmt).all()
     expenses_list = [
         expense_mapper(row.Expenses, row.category_name) for row in expenses
     ]
@@ -124,7 +123,9 @@ def create_budget():
         return jsonify({"message": f"Something went wrong {error_msg}"}), 400
     data = prepare_budget_data(raw_data, user.user_id)
     existing_budget, _, _ = get_budget_for_user(
-        user.user_id, parse_date(data["budget_year"], data["budget_month"])
+        user.user_id,
+        data["budget_month"],
+        data["budget_year"],
     )
     if existing_budget:
         return jsonify({"message": "Budget already exists"}), 409
@@ -151,6 +152,15 @@ def edit_budget(budget_id):
     is_valid, error_msg = validation.validate_budget_edit(data)
     if not is_valid:
         return jsonify({"message": error_msg}), 400
+
+    # Check if budget exists
+    existing_budget, _, _ = get_budget_for_user(
+        user.user_id,
+        data["budget_month"],
+        data["budget_year"],
+    )
+    if existing_budget:
+        return jsonify({"message": "Budget already exists"}), 409
 
     stmt = (
         update(Budgets)

@@ -126,15 +126,3 @@ def clone_expenses(
         for expense in expenses
     ]
     return expenses
-
-
-def get_curr_month_budget_details():
-    # TODO
-    """
-    select budgets.budget_id, budgets.budget_month,
-    (select SUM(incomes.amount) from incomes WHERE incomes.budget_id = budgets.budget_id
-    AND incomes.is_cyclical) as incomes_sum,
-    (select SUM(expenses.amount) from expenses WHERE expenses.budget_id = budgets.budget_id
-    AND expenses.is_cyclical) as expenses_sum From budgets WHERE budgets.budget_month = 9 AND budgets.budget_year = 2025
-    """
-    pass

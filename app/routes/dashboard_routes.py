@@ -2,7 +2,11 @@ from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
 from app.common.decorators import error_handler
 from app.services.auth_services import get_auth_user
-from app.services.dashboard_services import get_recent_operations
+from app.services.dashboard_services import (
+    get_recent_operations,
+    get_curr_month_expenses,
+    get_curr_month_incomes,
+)
 
 dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
@@ -23,26 +27,23 @@ def get_last_operations():
     return result, 201
 
 
-@dashboard_bp.route("/plot_budget", methods=["GET"])
-@error_handler
-@jwt_required()
-def plot_budget():
-    user, error_response, status_code = get_auth_user()
-    if error_response:
-        return error_response, status_code
-
-    data = {
-        "Type": ["Rent", "Groceries", "Transport", "Entertainment", "Savings"],
-        "Amount": [1200, 450, 150, 200, 500],
-    }
-    return jsonify(data), 201
-
-
-@dashboard_bp.route("/plot_expenses", methods=["GET"])
+@dashboard_bp.route("/get_curr_expenses", methods=["GET"])
 @error_handler
 @jwt_required()
 def plot_expenses():
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
-    pass
+    data = get_curr_month_expenses()
+    return jsonify(data), 201
+
+
+@dashboard_bp.route("/get_curr_incomes", methods=["GET"])
+@error_handler
+@jwt_required()
+def plot_incomes():
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
+    data = get_curr_month_incomes()
+    return jsonify(data), 201

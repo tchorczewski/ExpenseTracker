@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Budget Details</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="utf-8" />
+  <title>Budget Operations</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <style>
-    body { padding: 1rem; }
-    .table-container { max-height: 500px; overflow-y: auto; }
-    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-    .switch-add-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    body { padding: 1rem; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+    .table-container { max-height: 60vh; overflow-y: auto; }
+    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+    .switch-add { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; gap:1rem; }
   </style>
 </head>
 <body>
@@ -18,225 +19,334 @@
     <a href="/budgets" class="btn btn-outline-secondary">← Back to Budgets</a>
   </div>
 
-  <div class="switch-add-container">
-    <button class="btn btn-primary" id="addOpsBtn">Add</button>
-    <div class="form-check form-switch">
-      <input class="form-check-input" type="checkbox" id="opsToggleSwitch">
-      <label class="form-check-label" for="opsToggleSwitch" id="opsToggleLabel">Incomes</label>
+  <div class="switch-add">
+    <div>
+      <button id="addBtn" class="btn btn-primary">Add</button>
+    </div>
+    <div>
+      <div class="form-check form-switch">
+        <input class="form-check-input" id="opsToggle" type="checkbox" />
+        <label class="form-check-label" for="opsToggle" id="opsLabel">Incomes</label>
+      </div>
     </div>
   </div>
 
   <div class="table-container">
-    <table class="table table-striped align-middle" id="budgetOpsTable">
+    <table class="table table-striped align-middle" id="opsTable">
       <thead class="table-dark">
         <tr>
           <th>ID</th>
           <th>Date</th>
           <th>Category</th>
           <th>Amount</th>
-          <th>Description</th>
+          <th>Cyclical</th>
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- Filled dynamically -->
-      </tbody>
+      <tbody id="opsTBody"></tbody>
     </table>
   </div>
 
-  <!-- Add Income/Expense Modal -->
-  <div class="modal fade" id="addOpsModal" tabindex="-1" aria-labelledby="addOpsModalLabel" aria-hidden="true">
+  <!-- Add Modal -->
+  <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-      <div class="modal-content">
-        <form id="addOpsForm">
-          <div class="modal-header">
-            <h5 class="modal-title" id="addOpsModalLabel">Add Operation</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <form class="modal-content" id="addForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addModalLabel">Add Operation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Amount</label>
+            <input id="addAmount" type="number" step="0.01" class="form-control" required />
           </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="opsAmount" class="form-label">Amount</label>
-              <input type="number" step="0.01" class="form-control" id="opsAmount" required>
-            </div>
-            <div class="mb-3">
-              <label for="opsCategory" class="form-label">Category</label>
-              <select class="form-select" id="opsCategory" required>
-                <!-- Populated dynamically -->
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="opsDate" class="form-label">Date</label>
-              <input type="date" class="form-control" id="opsDate" required>
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Category</label>
+            <select id="addCategory" class="form-select" required></select>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Add</button>
+          <div class="mb-3">
+            <label class="form-label">Date</label>
+            <input id="addDate" type="date" class="form-control" required />
           </div>
-        </form>
-      </div>
+          <div class="form-check mb-0">
+            <input id="addCyclical" class="form-check-input" type="checkbox" />
+            <label class="form-check-label" for="addCyclical">Cyclical</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="addSubmit" type="submit" class="btn btn-primary">Add</button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <script>
-    const tableBody = document.querySelector("#budgetOpsTable tbody");
-    const toggleSwitch = document.getElementById("opsToggleSwitch");
-    const toggleLabel = document.getElementById("opsToggleLabel");
-    const addOpsBtn = document.getElementById("addOpsBtn");
-    const addOpsModal = new bootstrap.Modal(document.getElementById("addOpsModal"));
-    const addOpsForm = document.getElementById("addOpsForm");
-    const opsCategory = document.getElementById("opsCategory");
-    const opsAmount = document.getElementById("opsAmount");
-    const opsDate = document.getElementById("opsDate");
-    const title = document.getElementById("budgetTitle");
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" id="editForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edit Operation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editId" />
+          <div class="mb-3">
+            <label class="form-label">Amount</label>
+            <input id="editAmount" type="number" step="0.01" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Category</label>
+            <select id="editCategory" class="form-select" required></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Date</label>
+            <input id="editDate" type="date" class="form-control" required />
+          </div>
+          <div class="form-check mb-0">
+            <input id="editCyclical" class="form-check-input" type="checkbox" />
+            <label class="form-check-label" for="editCyclical">Cyclical</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="editSubmit" type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-    let currentBudgetId = null;
-    let budgetData = { incomes: [], expenses: [] };
-    let categoriesCache = { incomes: [], expenses: [] };
+<script>
+const opsTBody   = document.getElementById('opsTBody');
+const opsToggle  = document.getElementById('opsToggle');
+const opsLabel   = document.getElementById('opsLabel');
+const addBtn     = document.getElementById('addBtn');
 
-    function getBudgetIdFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("budget_id");
-    }
+const addModal    = new bootstrap.Modal(document.getElementById('addModal'));
+const editModal   = new bootstrap.Modal(document.getElementById('editModal'));
 
-    async function fetchCategories(type) {
-      if (categoriesCache[type].length > 0) return categoriesCache[type];
-      const endpoint = type === "incomes" ? "/api/incomes/get_categories" : "/api/expenses/get_categories";
-      const res = await fetch(endpoint, { headers: { "Authorization": "Bearer " + localStorage.getItem("token") } });
-      if (!res.ok) return alert(`Failed to load ${type} categories`);
-      const data = await res.json();
-      categoriesCache[type] = data;
-      return data;
-    }
+const addForm     = document.getElementById('addForm');
+const addAmount   = document.getElementById('addAmount');
+const addCategory = document.getElementById('addCategory');
+const addDate     = document.getElementById('addDate');
+const addCyclical = document.getElementById('addCyclical');
 
-    function populateCategoryDropdown(type) {
-      opsCategory.innerHTML = "";
-      fetchCategories(type).then(data => {
-        data.forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c.id;
-          opt.textContent = c.name;
-          opsCategory.appendChild(opt);
-        });
-      });
-    }
+const editForm     = document.getElementById('editForm');
+const editId       = document.getElementById('editId');
+const editAmount   = document.getElementById('editAmount');
+const editCategory = document.getElementById('editCategory');
+const editDate     = document.getElementById('editDate');
+const editCyclical = document.getElementById('editCyclical');
 
-    async function loadBudgetDetails(budgetId) {
-      currentBudgetId = budgetId;
-      const res = await fetch(`/api/budgets/${budgetId}/get_budget_details`, {
-        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
-      });
+const budgetTitle  = document.getElementById('budgetTitle');
 
-      if (!res.ok) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to load budget details</td></tr>`;
-        return;
-      }
+let budgetId = null;
+let budgetMonth = null;
+let budgetYear = null;
+let dateMin = null;
+let dateMax = null;
 
-      const { expenses, incomes } = await res.json(); // backend must return { expenses: [...], incomes: [...] }
-      budgetData = { expenses, incomes };
-      title.textContent = `Budget #${budgetId} Details`;
-      renderTable();
-    }
+let dataCache = { incomes: [], expenses: [] };
 
-    function renderTable() {
-      const type = toggleSwitch.checked ? "expenses" : "incomes";
-      toggleLabel.textContent = type.charAt(0).toUpperCase() + type.slice(1);
-      const data = budgetData[type];
-      tableBody.innerHTML = "";
+function getBudgetIdFromURL() {
+  return new URLSearchParams(window.location.search).get('budget_id');
+}
 
-      if (!data || data.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center">No ${type} yet</td></tr>`;
-        return;
-      }
+function pad(n){ return n<10 ? '0'+n : ''+n; }
 
-      data.forEach(item => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${item.id}</td>
-          <td>${item.date || "-"}</td>
-          <td>${item.category_name || "-"}</td>
-          <td>${item.amount || "-"}</td>
-          <td>${item.description || "-"}</td>
-          <td>
-            <button class="btn btn-sm btn-warning" onclick="editOperation(${item.id}, '${type}')">Edit</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteOperation(${item.id}, '${type}')">Delete</button>
-          </td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
+function setDateBoundsFromMonthYear(year, month) {
+  const first = new Date(year, month -1, 1);
+  const last  = new Date(year, month, 0);
+  dateMin = `${first.getFullYear()}-${pad(first.getMonth()+1)}-${pad(first.getDate())}`;
+  dateMax = `${last.getFullYear()}-${pad(last.getMonth()+1)}-${pad(last.getDate())}`;
+  addDate.min = dateMin; addDate.max = dateMax;
+  editDate.min = dateMin; editDate.max = dateMax;
+}
 
-    toggleSwitch.addEventListener("change", () => {
-      renderTable();
-      populateCategoryDropdown(toggleSwitch.checked ? "expenses" : "incomes");
-    });
+async function fetchCategories(type) {
+  const endpoint = type === 'incomes' ? '/api/incomes/get_categories' : '/api/expenses/get_categories';
+  const res = await fetch(endpoint, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }});
+  if (!res.ok) { alert('Failed load categories'); return []; }
+  return res.json();
+}
 
-    addOpsBtn.addEventListener("click", () => {
-      const type = toggleSwitch.checked ? "expenses" : "incomes";
-      populateCategoryDropdown(type);
-      opsAmount.value = "";
-      opsDate.value = new Date().toISOString().split("T")[0];
-      addOpsModal.show();
-    });
+function fillSelectWithCategories(selectEl, categories, selectedId=null) {
+  selectEl.innerHTML = '';
+  categories.forEach(c => {
+    const id = c.id ?? c.category_id;
+    const name = c.name ?? c.category_name;
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = name;
+    if (String(selectedId) === String(id)) opt.selected = true;
+    selectEl.appendChild(opt);
+  });
+}
 
-    addOpsForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const type = toggleSwitch.checked ? "expenses" : "incomes";
-      const endpoint = type === "expenses" ? "/api/expenses/add_expense" : "/api/incomes/add_income";
+function renderTable() {
+  const type = opsToggle.checked ? 'expenses' : 'incomes';
+  opsLabel.textContent = opsToggle.checked ? 'Expenses' : 'Incomes';
+  const list = dataCache[type] || [];
+  opsTBody.innerHTML = '';
+  if (!list.length) {
+    opsTBody.innerHTML = `<tr><td colspan="6" class="text-center">No ${type} yet</td></tr>`;
+    return;
+  }
+  list.forEach(item => {
+    const id = item.income_id ?? item.expense_id ?? item.id;
+    const rawDate = item.income_date ?? item.expense_date ?? item.date ?? item.created_at;
+    const date = rawDate ? (rawDate.split ? rawDate.split('T')[0] : rawDate) : '-';
+    const catName = item.category_name ?? item.category ?? '-';
+    const amount = item.amount ?? '-';
+    const cyc = (item.is_cyclical === true || item.is_cyclical === 'true') ? '✅' : '❌';
+    opsTBody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td>${id}</td>
+        <td>${date}</td>
+        <td>${catName}</td>
+        <td>${amount}</td>
+        <td>${cyc}</td>
+        <td>
+          <button class="btn btn-sm btn-warning me-1" onclick="onEdit(${id}, '${type}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="onDelete(${id}, '${type}')">Delete</button>
+        </td>
+      </tr>
+    `);
+  });
+}
 
-      const payload = {
-        amount: parseFloat(opsAmount.value),
-        category_id: parseInt(opsCategory.value),
-        date: opsDate.value,
-        budget_id: currentBudgetId
-      };
+async function loadBudgetDetails(bId) {
+  budgetId = bId;
+  const res = await fetch(`/api/budgets/${bId}/get_budget_details`, {
+    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+  });
+  if (!res.ok) {
+    opsTBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to load budget details</td></tr>`;
+    return;
+  }
+  const payload = await res.json();
+  dataCache.expenses = payload.expenses ?? payload[0] ?? [];
+  dataCache.incomes  = payload.incomes  ?? payload[1] ?? [];
+  const d = payload.date ? new Date(payload.date) : new Date();
+  budgetMonth = d.getMonth()+1; budgetYear = d.getFullYear();
+  setDateBoundsFromMonthYear(budgetYear, budgetMonth);
+  budgetTitle.textContent = `Budget #${budgetId} — ${pad(budgetMonth)}/${budgetYear}`;
+  renderTable();
+}
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + localStorage.getItem("token")
-        },
-        body: JSON.stringify(payload)
-      });
+addBtn.addEventListener('click', async () => {
+  const type = opsToggle.checked ? 'expenses' : 'incomes';
+  const cats = await fetchCategories(type);
+  fillSelectWithCategories(addCategory, cats);
+  addForm.reset();
+  addDate.value = dateMin ?? new Date().toISOString().split('T')[0];
+  addCyclical.checked = false;
+  document.getElementById('addModalLabel').textContent = `Add ${type.slice(0, -1).charAt(0).toUpperCase() + type.slice(1, -1)}`;
+  addModal.show();
+});
 
-      if (res.ok) {
-        alert(`${type.charAt(0).toUpperCase() + type.slice(1)} added!`);
-        addOpsModal.hide();
-        loadBudgetDetails(currentBudgetId);
-      } else {
-        alert(`Failed to add ${type}`);
-      }
-    });
+addForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const type = opsToggle.checked ? 'expenses' : 'incomes';
+  const endpoint = type === 'expenses' ? '/api/expenses/add_expense' : '/api/incomes/add_income';
+  const payload = {
+    amount: parseFloat(addAmount.value),
+    category_id: parseInt(addCategory.value),
+    date: addDate.value,
+    is_cyclical: Boolean(addCyclical.checked),
+    budget_id: Number(budgetId)
+  };
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) {
+    addModal.hide();
+    await loadBudgetDetails(budgetId);
+  } else {
+    const err = await res.json().catch(()=>({message:'Error'}));
+    alert('Failed to add: ' + (err.message || res.status));
+  }
+});
 
-    function editOperation(id, type) {
-      alert(`Edit ${type} ID ${id} (implement modal here)`);
-    }
+window.onEdit = async function(id, type) {
+  opsToggle.checked = (type === 'expenses');
+  opsLabel.textContent = opsToggle.checked ? 'Expenses' : 'Incomes';
+  const list = dataCache[type] || [];
+  const item = list.find(x => String(x.income_id ?? x.expense_id ?? x.id) === String(id));
+  if (!item) { alert('Item not found'); return; }
+  const cats = await fetchCategories(type);
+  fillSelectWithCategories(editCategory, cats, item.category_id);
+  editId.value = id;
+  editAmount.value = item.amount ?? '';
+  const rawDate = item.income_date ?? item.expense_date ?? item.date ?? '';
+  editDate.value = rawDate ? (rawDate.split ? rawDate.split('T')[0] : rawDate) : (dateMin ?? '');
+  editCyclical.checked = (item.is_cyclical === true || item.is_cyclical === 'true');
+  document.getElementById('editModalLabel').textContent = `Edit ${type.slice(0, -1).charAt(0).toUpperCase() + type.slice(1, -1)}`;
+  editModal.show();
+};
 
-    function deleteOperation(id, type) {
-      if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
-      fetch(`/api/budgets/${currentBudgetId}/${type}/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
-      })
-      .then(res => {
-        if (res.ok) {
-          budgetData[type] = budgetData[type].filter(x => x.id !== id);
-          renderTable();
-        } else {
-          alert(`Failed to delete ${type}`);
-        }
-      });
-    }
+editForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const type = opsToggle.checked ? 'expenses' : 'incomes';
+  const id = parseInt(editId.value);
+  const endpoint = type === 'expenses'
+    ? '/api/expenses/edit_expense'
+    : '/api/incomes/edit_income';
+  const payload = {
+    amount: parseFloat(editAmount.value),
+    category_id: parseInt(editCategory.value),
+    date: editDate.value,
+    is_cyclical: Boolean(editCyclical.checked)
+  };
+  // ✅ Add ID to body
+  if (type === 'expenses') payload.expense_id = id;
+  else payload.income_id = id;
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const id = getBudgetIdFromURL();
-      if (!id) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Missing budget ID</td></tr>`;
-        return;
-      }
-      loadBudgetDetails(id);
-    });
-  </script>
+  const res = await fetch(endpoint, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) {
+    editModal.hide();
+    await loadBudgetDetails(budgetId);
+  } else {
+    const err = await res.json().catch(()=>({message:'Error'}));
+    alert('Failed to edit: ' + (err.message || res.status));
+  }
+});
+
+window.onDelete = async function(id, type) {
+  if (!confirm('Are you sure?')) return;
+  const endpoint = type === 'expenses'
+    ? `/api/expenses/${id}/delete_expense`
+    : `/api/incomes/${id}/delete_income`;
+  const res = await fetch(endpoint, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }});
+  if (res.ok) {
+    dataCache[type] = (dataCache[type] || []).filter(x => String(x.income_id ?? x.expense_id ?? x.id) !== String(id));
+    renderTable();
+  } else {
+    alert('Delete failed');
+  }
+};
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const id = getBudgetIdFromURL();
+  if (!id) {
+    opsTBody.innerHTML = `<tr><td colspan="6" class="text-danger text-center">Missing budget_id query param</td></tr>`;
+    return;
+  }
+  await loadBudgetDetails(id);
+  opsToggle.addEventListener('change', () => renderTable());
+});
+</script>
 </body>
 </html>

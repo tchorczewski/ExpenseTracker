@@ -9,7 +9,7 @@ class Expenses(db.Model):
         db.Integer, db.ForeignKey("expense_categories.category_id"), nullable=False
     )
     amount = db.Column(db.Numeric(12, 2), nullable=False)
-    expense_date = db.Column(db.Date, nullable=False, default=date.today)
+    date = db.Column(db.Date, nullable=False, default=date.today)
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
     created_at = db.Column(
         db.DateTime, nullable=False, default=datetime.now(timezone.utc)
@@ -85,7 +85,7 @@ class Incomes(db.Model):
         db.Integer, db.ForeignKey("income_categories.category_id"), nullable=False
     )
     amount = db.Column(db.Numeric(12, 2), nullable=False)
-    income_date = db.Column(db.DateTime, nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
     is_cyclical = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(
         db.DateTime, nullable=False, default=datetime.now(timezone.utc)

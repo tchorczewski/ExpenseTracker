@@ -61,36 +61,6 @@ def is_valid_amount(amount) -> bool:
         return False
 
 
-def validate_expense(data) -> (bool, str):
-    """
-    Validation method used when creating expenses via API.
-    :param data: Data from a create_expense request
-    :return: A boolean value if the validation is OK, additional error message to inform where the issue is
-    """
-    required_fields = ["category_id", "amount", "expense_date"]
-    for field in required_fields:
-        if field not in data or not data[field]:
-            return False, f"Missing required field: {field}"
-    if not is_valid_amount(data["amount"]):
-        return False, "Incorrect value passed as amount"
-    if not is_valid_date(data["expense_date"]):
-        return False, "Incorrect date format, should be YYYY-MM-DD"
-    if not is_valid_category(int(data["category_id"])):
-        return False, "Out of scope for expense categories please contact the developer"
-    return True, None
-
-
-def is_valid_budget_status(status_id) -> bool:
-    """
-    Verifies if the status of a budget is allowing the attempted operation
-    :return: True if operation is permitted on given budget
-    """
-    try:
-        return 1 <= int(status_id) <= 4
-    except (ValueError, TypeError):
-        return False
-
-
 def is_valid_category(cat_id) -> bool:
     try:
         cat_id = int(cat_id)
@@ -99,12 +69,30 @@ def is_valid_category(cat_id) -> bool:
         return False
 
 
-def is_valid_budget_category(cat_id):
-    try:
-        cat_id = int(cat_id)
-        return 1 <= cat_id <= 4
-    except (ValueError, TypeError):
-        return False, "An error occurred"
+def validate_operation(data):
+    """
+    Validate if passed data is going to create valid expense/income
+    :param data: Data from request
+    :return: A boolean value if the validation is OK, additional error message or none if okay
+    """
+    required_fields = [
+        "category_id",
+        "amount",
+        "date",
+        "is_cyclical",
+        "budget_id",
+    ]
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return False, f"Missing required field: {field}"
+    if not is_valid_amount(data["amount"]):
+        return False, "Incorrect value passed as amount"
+    if not is_valid_date(data["date"]):
+        return False, "Incorrect date format, should be YYYY-MM-DD"
+    if not is_valid_category(int(data["category_id"])):
+        return False, "Category not found"
+
+    return True, None
 
 
 def validate_budget(data):
@@ -120,41 +108,27 @@ def validate_budget(data):
         if not is_valid_amount(data["budget_amount"]):
             return False, "Incorrect value passed as amount"
         if not is_valid_year(data["budget_year"]):
-            return False, "Incorrect year format, try again"
+            return False, "Incorrect data"
         if not is_valid_month(data["budget_month"]):
-            return False, "Incorrect month format, try again"
+            return False, "Incorrect data"
     return True, None
 
 
-def validate_expense_edit(data, is_patch=False):
+def validate_operation_edit(data):
     allowed_fields = [
         "category_id",
         "amount",
         "description",
-        "expense_date",
+        "date",
         "is_cyclical",
+        "expense_id",
+        "income_id",
     ]
-    required_fields = ["category_id", "amount", "expense_date"]
     errors = {}
-    check_new_budget_id = False
-
     unknown_fields = [field for field in data if field not in allowed_fields]
     if unknown_fields:
         errors["unknown_fields"] = f"Fields {unknown_fields} not allowed in this call"
 
-    if not is_patch:
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            errors["missing_fields"] = f"Missing required fields {missing_fields}"
-        is_valid, error_msg = validate_expense(data)
-        if not is_valid:
-            errors["Validation"] = error_msg
-
-    if "expense_date" in data:
-        check_new_budget_id = True
-        if not is_valid_date(data["expense_date"]):
-            errors["date"] = "Incorrect date format"
-
     if "amount" in data:
         if not is_valid_amount(data["amount"]):
             errors["amount"] = "Incorrect value passed as amount"
@@ -164,59 +138,8 @@ def validate_expense_edit(data, is_patch=False):
             errors["category_id"] = "Incorrect category id passed"
 
     if errors:
-        return False, check_new_budget_id, errors
-    return True, check_new_budget_id, errors
-
-
-def validate_income(data):
-    required_fields = ["category_id", "amount", "income_date", "is_cyclical"]
-    for field in required_fields:
-        if field not in data or not data[field]:
-            return False, f"Missing required field: {field}"
-    if not is_valid_amount(data["amount"]):
-        return False, f"Incorrect value passed as amount"
-    if not is_valid_date(data["income_date"]):
-        return False, f"Incorrect date format"
-    if not is_valid_budget_category(data["category_id"]):
-        return False, f"Incorrect status"
-    if data["is_cyclical"].lower() not in ["true", "false"]:
-        return False, f"Incorrect cyclical state"
-    return True, None
-
-
-def validate_income_edit(data, is_patch=False):
-    required_fields = ["category_id", "amount", "income_date", "is_cyclical"]
-    errors = {}
-    check_new_budget_id = False
-
-    unknown_fields = [field for field in data if field not in required_fields]
-    if unknown_fields:
-        errors["unknown_fields"] = f"Fields {unknown_fields} not editable"
-
-    if not is_patch:
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            errors["missing_fields"] = f"Missing required fields {missing_fields}"
-        is_valid, error_msg = validate_income(data)
-        if not is_valid:
-            errors["Validation"] = error_msg
-
-    if "income_date" in data:
-        check_new_budget_id = True
-        if not is_valid_date(data["income_date"]):
-            errors["date"] = "Incorrect date format"
-
-    if "amount" in data:
-        if not is_valid_amount(data["amount"]):
-            errors["amount"] = "Incorrect value passed as amount"
-
-    if "category_id" in data:
-        if not is_valid_category(data["category_id"]):
-            errors["category_id"] = "Incorrect category id passed"
-
-    if errors:
-        return False, check_new_budget_id, errors
-    return True, check_new_budget_id, errors
+        return False, errors
+    return True, errors
 
 
 def validate_budget_edit(data):
@@ -235,7 +158,7 @@ def validate_budget_edit(data):
         errors["year"] = (
             f"Invalid year (should be between 1922 and {datetime.now().year + 10})"
         )
-    if "status_id" in data and not is_valid_budget_status(data["status_id"]):
+    if "status_id" in data and not is_valid_category(data["status_id"]):
         errors["status"] = "Invalid or locked status"
 
     if errors:

@@ -24,7 +24,6 @@ from .routes.swagger import swagger_bp
 from .routes.ui_routes import main_bp
 
 
-
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -41,7 +40,6 @@ def create_app():
     app.register_blueprint(income_bp, url_prefix="/api/incomes")
     app.register_blueprint(operations_bp, url_prefix="/api/operations")
     app.register_blueprint(swagger_bp, prefix=getenv("SWAGGER_URL"))
-
     app.register_blueprint(dashboard_bp, url_prefix="/api/dashboard")
 
     @jwt.unauthorized_loader

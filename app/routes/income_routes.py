@@ -2,18 +2,17 @@ import datetime
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
-from sqlalchemy import select
-from sqlalchemy.exc import OperationalError, IntegrityError
-
+from sqlalchemy import select, update
+from sqlalchemy.exc import OperationalError
+from datetime import datetime
 from app.common.decorators import error_handler
-from app.services.budget_services import verify_budget_change
 from app.services.income_services import prepare_income_data
 from db import db
-from db.models import Users, Incomes
+from db.models import Users, Incomes, IncomeCategories
 from utils import validation
 from app.services.auth_services import get_auth_user
-from utils.mappers import income_mapper
-from utils.validation import validate_income
+from utils.mappers import income_mapper, category_mapper
+from utils.validation import validate_operation
 
 income_bp = Blueprint("incomes", __name__)
 
@@ -46,13 +45,13 @@ def get_users_incomes():
 @income_bp.route("/add_income", methods=["POST"])
 @error_handler
 @jwt_required()
-def create_income():
+def add_income():
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
 
-    raw_data = request.form.to_dict()
-    is_valid, error_msg = validate_income(raw_data)
+    raw_data = request.get_json()
+    is_valid, error_msg = validate_operation(raw_data)
 
     if not is_valid:
         return jsonify({"message": error_msg}), 400
@@ -98,55 +97,39 @@ def delete_income(income_id):
     return jsonify(response), 200
 
 
-@income_bp.route("/<int:income_id>/edit_income", methods=["PUT", "PATCH"])
+@income_bp.route("/edit_income", methods=["PUT", "PATCH"])
 @error_handler
 @jwt_required()
-def edit_income(income_id):
+def edit_income():
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
 
-    income = Incomes.query.get(income_id)
+    data = request.get_json()
 
-    if not income:
-        return jsonify({"message": "Income not found"}), 404
-    if user.user_id != income.user_id:
-        return (
-            jsonify({"message": "Unauthorized"}),
-            403,
-        )
-
-    data = request.form.to_dict()
-    if request.method == "PUT":
-        is_valid, check_new_budget_id, error_msg = validation.validate_income_edit(data)
-        if not is_valid:
-            return jsonify({"message": error_msg}), 400
-
-    if request.method == "PATCH":
-        is_valid, check_new_budget_id, error_msg = validation.validate_income_edit(
-            data, is_patch=True
-        )
-        if not is_valid:
-            return jsonify({"message": error_msg}), 400
-
-    if check_new_budget_id:
-        status, new_budget_id, error_msg = verify_budget_change(
-            user.user_id, data["income_date"], income.budget_id
-        )
-        if error_msg:
-            return jsonify({"message": error_msg}), 400
-        if status:
-            income.budget_id = new_budget_id
-
-    for key, value in data.items():
-        setattr(income, key, float(value) if key == "amount" else value)
-    income.updated_at = datetime.datetime.now()
-
+    is_valid, error_msg = validation.validate_operation_edit(data)
+    if not is_valid:
+        return jsonify({"message": error_msg}), 400
+    stmt = (
+        update(Incomes)
+        .where(Incomes.income_id == data["income_id"], Incomes.user_id == user.user_id)
+        .values(**data, updated_at=datetime.now())
+        .returning(Incomes)
+    )
+    updated_expense = db.session.execute(stmt).scalar_one_or_none()
     db.session.commit()
-    response = {
-        "message": f"Income {income.income_id} successfully updated",
-        "updated_expense": {
-            field: getattr(income, field) for field in income.__table__.columns.keys()
-        },
-    }
-    return jsonify(response), 200
+
+    return income_mapper(updated_expense), 200
+
+
+@income_bp.route("/get_categories", methods=["GET"])
+@jwt_required()
+@error_handler
+def get_categories():
+    user, error_response, status_code = get_auth_user()
+    if error_response:
+        return error_response, status_code
+    stmt = select(IncomeCategories)
+    results = db.session.execute(stmt).scalars().all()
+    results_list = [category_mapper(row) for row in results]
+    return jsonify(results_list), 200

@@ -9,7 +9,7 @@ from utils.validation import is_valid_date
 
 
 @error_handler
-def get_budget_for_user(user_id: int, selected_date_str: str):
+def get_budget_for_user(user_id: int, month: int, year: int):
     """
     Retrieve the budget for given user and date (format: 'YYYY-MM')
     :param user_id: ID of user stored in JWT
@@ -17,16 +17,11 @@ def get_budget_for_user(user_id: int, selected_date_str: str):
     :return: Tuple (Budget object or None, error_message) if no budget found None, if no error, error_message is None
     """
 
-    if not is_valid_date(selected_date_str):
-        return None, None, "Invalid date format. Expected YYYY-MM-DD"
-
-    selected_date = datetime.strptime(selected_date_str, "%Y-%m-%d")
-
     stmt = (
         select(Budgets)
         .filter(Budgets.user_id == user_id)
-        .filter(Budgets.budget_month == selected_date.month)
-        .filter(Budgets.budget_year == selected_date.year)
+        .filter(Budgets.budget_month == month)
+        .filter(Budgets.budget_year == year)
     )
     result = db.session.execute(stmt).scalar_one_or_none()
     if not result:

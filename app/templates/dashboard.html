@@ -10,36 +10,32 @@
       display: flex;
       height: 100vh;
       margin: 0;
+      font-family: Arial, sans-serif;
     }
     .sidebar {
-      width: 220px;
+      width: 250px;
       background-color: #212529;
+      color: white;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+    }
+    .sidebar .nav-link {
       color: white;
-    }
-    .sidebar .top {
-      padding: 1rem;
-      text-align: center;
-      border-bottom: 1px solid #444;
-      font-weight: bold;
-    }
-    .sidebar .nav-btn {
+      padding: 0.5rem 1rem;
       display: block;
-      width: calc(100% - 2rem);
-      margin: 1rem auto 0 auto;
-      font-size: 0.9rem;
+      text-decoration: none;
     }
-    .sidebar .bottom {
-      padding: 1rem;
+    .sidebar .nav-link.active {
+      background-color: #0d6efd;
+    }
+    .sidebar .logout {
+      margin: 1rem;
     }
     .content {
-      flex-grow: 1;
-      padding: 1rem;
+      flex: 1;
+      padding: 2rem;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
     }
     .chart-container {
       display: flex;
@@ -48,7 +44,7 @@
     }
     .chart {
       flex: 1;
-      height: 400px; /* fixed height or adjust as needed */
+      height: 400px;
       border: 1px solid #000;
       position: relative;
     }
@@ -59,27 +55,50 @@
     .table-section {
       margin-top: 2rem;
     }
+    .table-header-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
+  <!-- Sidebar -->
   <div class="sidebar">
     <div>
-      <div class="top">Logo/Dashboard</div>
-      <button class="btn btn-primary nav-btn" onclick="window.location.href='/budgets'">Budgets</button>
+      <h3 class="text-center mt-3">Dashboard</h3>
+      <ul class="nav flex-column mt-4">
+        <li class="nav-item">
+          <a href="/" class="nav-link active">Home</a>
+        </li>
+        <li class="nav-item">
+          <a href="/budgets" class="nav-link">Budgets</a>
+        </li>
+      </ul>
     </div>
-    <div class="bottom">
-      <button class="btn btn-danger w-100" id="logoutBtn">Logout</button>
+    <div class="logout">
+      <button id="logoutBtn" class="btn btn-outline-light w-100">Logout</button>
     </div>
   </div>
 
+  <!-- Main Content -->
   <div class="content">
+    <h2 class="mb-4">Dashboard Overview</h2>
+
     <div class="chart-container">
-      <div class="chart" id="budget_chart">Loading chart...</div>
-      <div class="chart" id="static_chart">Loading chart...</div>
+      <div class="chart" id="expenses_chart">Loading expenses...</div>
+      <div class="chart" id="incomes_chart">Loading incomes...</div>
     </div>
 
     <div class="table-section">
-      <button class="btn btn-outline-primary mb-3">Detailed view</button>
+      <div class="table-header-buttons">
+        <div>
+          <button class="btn btn-outline-primary" id="detailsBtn">Detailed view</button>
+          <button class="btn btn-success ms-2" data-bs-toggle="modal" data-bs-target="#addBudgetModal">Add Budget</button>
+        </div>
+      </div>
+
       <table class="table">
         <thead>
           <tr>
@@ -89,59 +108,78 @@
             <th>Amount</th>
           </tr>
         </thead>
-        <tbody id="recentTable">
-        </tbody>
+        <tbody id="recentTable"></tbody>
       </table>
     </div>
   </div>
 
+  <!-- Add Budget Modal -->
+  <div class="modal fade" id="addBudgetModal" tabindex="-1" aria-labelledby="addBudgetModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addBudgetModalLabel">Add New Budget</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addBudgetForm">
+            <div class="mb-3">
+              <label for="budgetMonth" class="form-label">Month</label>
+              <input type="number" class="form-control" id="budgetMonth" min="1" max="12" required>
+            </div>
+            <div class="mb-3">
+              <label for="budgetYear" class="form-label">Year</label>
+              <input type="number" class="form-control" id="budgetYear" min="2000" max="2100" required>
+            </div>
+            <div class="mb-3">
+              <label for="budgetAmount" class="form-label">Amount</label>
+              <input type="number" class="form-control" id="budgetAmount" step="0.01" required>
+            </div>
+            <div class="mb-3">
+              <label for="budgetStatus" class="form-label">Status</label>
+              <select id="budgetStatus" class="form-select" required></select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveBudgetBtn">Save Budget</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
   <script>
-    async function drawPlot() {
-      const container = document.getElementById("budget_chart");
-      container.innerHTML = "Loading chart...";
-
+    async function drawExpensesChart() {
+      const container = document.getElementById("expenses_chart");
       try {
-        const response = await fetch("/api/dashboard/plot_budget");
+        const response = await fetch("/api/dashboard/get_curr_expenses");
         const data = await response.json();
-
-        const labels = data.Type || [];
-        const values = data.Amount || [];
-
-        if (!labels.length || !values.length) {
-          container.innerHTML = "<p>No data for chart</p>";
-          return;
-        }
-
-        container.innerHTML = ""; // clear loading text
-
-        const trace = {
-          labels,
-          values,
-          type: "pie",
-          textinfo: "label+percent",
-          insidetextorientation: "radial",
-          showlegend: false
-        };
-
-        const layout = {
-          margin: { t: 20, b: 20, l: 20, r: 20 },
-          autosize: true,
-          paper_bgcolor: "transparent",
-          plot_bgcolor: "transparent"
-        };
-
-        // Ensure chart fits container and is responsive
-        Plotly.react(container, [trace], layout, { responsive: true });
-
+        const trace = { x: data.Category || [], y: data.Amount || [], type: 'bar', marker: { color: 'tomato' } };
+        Plotly.newPlot(container, [trace], { title: 'Expenses', margin: { t: 40, b: 40 } });
       } catch (err) {
-        console.error("Failed to load budget chart:", err);
-        container.innerHTML = "<p>Error loading chart</p>";
+        console.error("Expenses chart error:", err);
+      }
+    }
+
+    async function drawIncomesChart() {
+      const container = document.getElementById("incomes_chart");
+      try {
+        const response = await fetch("/api/dashboard/get_curr_incomes");
+        const data = await response.json();
+        const trace = { x: data.Category || [], y: data.Amount || [], type: 'bar', marker: { color: 'mediumseagreen' } };
+        Plotly.newPlot(container, [trace], { title: 'Incomes', margin: { t: 40, b: 40 } });
+      } catch (err) {
+        console.error("Incomes chart error:", err);
       }
     }
 
     function loadRecent() {
       const table = document.getElementById("recentTable");
-
       fetch("/api/dashboard/get_last_operations")
         .then(res => res.json())
         .then(data => {
@@ -156,28 +194,91 @@
                   <td>${item.type || "-"}</td>
                   <td>${item.category_name || "-"}</td>
                   <td>${item.amount || "-"}</td>
-                </tr>
-              `;
+                </tr>`;
             });
           }
-        })
-        .catch(() => {
-          table.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Error loading data</td></tr>`;
         });
     }
 
-    document.getElementById("logoutBtn").addEventListener("click", function () {
-      localStorage.removeItem("access_token");
-      sessionStorage.removeItem("access_token");
+    async function populateStatusSelect() {
+      const statusSelect = document.getElementById("budgetStatus");
+      statusSelect.innerHTML = "";
+      try {
+        const res = await fetch("/api/budgets/get_statuses", {
+          headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+        });
+        const data = await res.json();
+        const statuses = Array.isArray(data) ? data : data.statuses || [];
+
+        if (!statuses.length) {
+          const opt = document.createElement("option");
+          opt.textContent = "No statuses found";
+          statusSelect.appendChild(opt);
+          return;
+        }
+
+        statuses.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+          opt.textContent = s.name;
+          statusSelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Failed to load statuses:", err);
+        const opt = document.createElement("option");
+        opt.textContent = "Error loading statuses";
+        statusSelect.appendChild(opt);
+      }
+    }
+
+    const addBudgetModal = document.getElementById("addBudgetModal");
+    addBudgetModal.addEventListener("show.bs.modal", () => {
+      const now = new Date();
+      document.getElementById("budgetMonth").value = now.getMonth() + 1;
+      document.getElementById("budgetYear").value = now.getFullYear();
+      populateStatusSelect(); // fetch fresh statuses every time modal opens
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
       window.location.href = "/login";
     });
 
-    loadRecent();
-    drawPlot();
+    document.getElementById("saveBudgetBtn").addEventListener("click", async () => {
+      const payload = {
+        budget_month: document.getElementById("budgetMonth").value,
+        budget_year: document.getElementById("budgetYear").value,
+        budget_amount: document.getElementById("budgetAmount").value,
+        status_id: document.getElementById("budgetStatus").value
+      };
 
-    // Optional: make charts resize dynamically when window changes
-    window.addEventListener('resize', () => {
-      Plotly.Plots.resize(document.getElementById('budget_chart'));
+      try {
+        const res = await fetch("/api/budgets/create_budget", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("token")
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          alert("Budget added successfully!");
+          location.reload();
+        } else {
+          const errData = await res.json();
+          alert("Failed: " + (errData.message || "Error adding budget"));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error adding budget.");
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      drawExpensesChart();
+      drawIncomesChart();
+      loadRecent();
     });
   </script>
 </body>
