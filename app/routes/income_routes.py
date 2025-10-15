@@ -2,7 +2,7 @@ import datetime
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.exc import OperationalError
 from datetime import datetime
 from app.common.decorators import error_handler
@@ -66,35 +66,21 @@ def add_income():
     return response, 201
 
 
-@income_bp.route("/<int:income_id>/delete_expense", methods=["DELETE"])
+@income_bp.route("/delete_income", methods=["DELETE"])
 @error_handler
 @jwt_required()
-def delete_income(income_id):
+def income():
     user, error_msg, status_code = get_auth_user()
     if error_msg:
         return error_msg, status_code
+    data = request.get_json()
 
-    stmt = select(Incomes).filter(Incomes.income_id == income_id)
-    try:
-        income = db.session.execute(stmt).scalar_one_or_none()
-    except OperationalError:
-        msg = {"message": "Connection error"}
-        return jsonify(msg), 500
-    except Exception as e:
-        return jsonify({"message": f"Error {str(e)}"}), 500
-
-    if not income:
-        return jsonify({"message": "Expense not found"}), 404
-
-    if income.user_id != user.user_id:
-        return (
-            jsonify({"message": "Unauthorized"}),
-            403,
-        )
-    db.session.delete(income)
+    stmt = delete(Incomes).where(
+        Incomes.income_id == data["income_id"], Incomes.user_id == user.user_id
+    )
+    db.session.execute(stmt)
     db.session.commit()
-    response = {"message": f"Expense {income.expense_id} successfully deleted."}
-    return jsonify(response), 200
+    return {"message": "Ok"}, 200
 
 
 @income_bp.route("/edit_income", methods=["PUT", "PATCH"])

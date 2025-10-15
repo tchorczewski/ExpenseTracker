@@ -2,7 +2,7 @@ import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import OperationalError
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from datetime import datetime
 from app.common.decorators import error_handler
 from app.services.expenses_services import prepare_expense_data
@@ -61,37 +61,21 @@ def create_expense():
     return response, 201
 
 
-@expense_bp.route("/<int:expense_id>/delete_expense", methods=["DELETE"])
+@expense_bp.route("/delete_expense", methods=["DELETE"])
 @error_handler
 @jwt_required()
-# TODO Rmake this endpoint to allow expense id to be sent from frontend not to make repeated db calls
-def delete_expense(expense_id):
+def delete_expense():
     user, error_msg, status_code = get_auth_user()
     if error_msg:
         return error_msg, status_code
+    data = request.get_json()
 
-    stmt = select(Expenses).filter(Expenses.expense_id == expense_id)
-    try:
-        expense = db.session.execute(stmt).scalar_one_or_none()
-    except OperationalError:
-        msg = {"message": "Connection error"}
-        return jsonify(msg), 500
-    except Exception as e:
-        return jsonify({"message": f"Error {str(e)}"}), 500
-
-    if not expense:
-        return jsonify({"message": "Expense not found"}), 404
-
-    if expense.user_id != user.user_id:
-        return (
-            jsonify({"message": "Unauthorized"}),
-            403,
-        )
-
-    db.session.delete(expense)
+    stmt = delete(Expenses).where(
+        Expenses.expense_id == data["expense_id"], Expenses.user_id == user.user_id
+    )
+    db.session.execute(stmt)
     db.session.commit()
-    response = {"message": f"Expense {expense.expense_id} successfully deleted."}
-    return jsonify(response), 200
+    return {"message": "Ok"}, 200
 
 
 @expense_bp.route("/edit_expense", methods=["PUT", "PATCH"])

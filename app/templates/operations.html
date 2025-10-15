@@ -324,19 +324,38 @@ editForm.addEventListener('submit', async (e) => {
   }
 });
 
+/* --------- Delete --------- */
 window.onDelete = async function(id, type) {
   if (!confirm('Are you sure?')) return;
+
   const endpoint = type === 'expenses'
-    ? `/api/expenses/${id}/delete_expense`
-    : `/api/incomes/${id}/delete_income`;
-  const res = await fetch(endpoint, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }});
+    ? '/api/expenses/delete_expense'
+    : '/api/incomes/delete_income';
+
+  const key = type === 'expenses' ? 'expense_id' : 'income_id';
+  const payload = {};
+  payload[key] = Number(id);
+
+  const res = await fetch(endpoint, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: JSON.stringify(payload)
+  });
+
   if (res.ok) {
-    dataCache[type] = (dataCache[type] || []).filter(x => String(x.income_id ?? x.expense_id ?? x.id) !== String(id));
+    dataCache[type] = (dataCache[type] || []).filter(x =>
+      String(x.income_id ?? x.expense_id ?? x.id) !== String(id)
+    );
     renderTable();
   } else {
-    alert('Delete failed');
+    const err = await res.json().catch(()=>({message:'Error'}));
+    alert('Delete failed: ' + (err.message || res.status));
   }
 };
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   const id = getBudgetIdFromURL();
