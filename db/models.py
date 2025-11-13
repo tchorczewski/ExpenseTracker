@@ -1,63 +1,35 @@
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
 from . import db
-
-
-class Expenses(db.Model):
-    __tablename__ = "expenses"
-    expense_id = db.Column(db.Integer, primary_key=True)
-    category_id = db.Column(
-        db.Integer, db.ForeignKey("expense_categories.category_id"), nullable=False
-    )
-    amount = db.Column(db.Numeric(12, 2), nullable=False)
-    date = db.Column(db.Date, nullable=False, default=date.today)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
-    created_at = db.Column(
-        db.DateTime, nullable=False, default=datetime.now(timezone.utc)
-    )
-    updated_at = db.Column(db.DateTime)
-    budget_id = db.Column(
-        db.Integer, db.ForeignKey("budgets.budget_id"), nullable=False
-    )
-    is_cyclical = db.Column(db.Boolean, nullable=False, default=False)
-
-    user = db.relationship("Users", backref="expenses")
-    category = db.relationship("ExpenseCategories", backref="expenses")
 
 
 class Users(db.Model):
     __tablename__ = "users"
-    user_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(250), nullable=False, unique=True)
     email = db.Column(db.String(320), nullable=False, unique=True)
     first_name = db.Column(db.String(255), nullable=False)
     last_name = db.Column(db.String(255), nullable=False)
-    user_password = db.Column(db.LargeBinary, nullable=False)
-    user_status_id = db.Column(
-        db.Integer, db.ForeignKey("user_statuses.status_id"), nullable=False
-    )
-    user_role_id = db.Column(
-        db.Integer, db.ForeignKey("user_roles.role_id"), nullable=False
-    )
+    password = db.Column(db.LargeBinary, nullable=False)
+    status_id = db.Column(db.Integer, db.ForeignKey("statuses.id"), nullable=False)
+    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable=False)
     created_at = db.Column(
         db.DateTime, nullable=False, default=datetime.now(timezone.utc)
     )
     updated_by = db.Column(db.Integer)
     updated_at = db.Column(db.DateTime)
 
-    role_id = db.relationship("UserRoles", backref="users")
-    status_id = db.relationship("UserStatuses", backref="users")
+    role = db.relationship("Roles", backref="users")
+    status = db.relationship("Statuses", backref="users")
 
 
 class Budgets(db.Model):
     __tablename__ = "budgets"
-    budget_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     budget_month = db.Column(db.Integer, nullable=False)
     budget_year = db.Column(db.Integer, nullable=False)
-    budget_amount = db.Column(db.Numeric(10, 2), nullable=False)
-    status_id = db.Column(
-        db.Integer, db.ForeignKey("budget_statuses.status_id"), nullable=False
-    )
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    status_id = db.Column(db.Integer, db.ForeignKey("statuses.id"), nullable=False)
     created_at = db.Column(
         db.DateTime, nullable=False, default=datetime.now(timezone.utc)
     )
@@ -65,8 +37,8 @@ class Budgets(db.Model):
     is_generated = db.Column(db.Boolean, default=False, nullable=False)
 
     user = db.relationship("Users", backref="budget")
-    status = db.relationship("BudgetStatuses", backref="budget")
-    expenses = db.relationship("Expenses", backref="budget", lazy="select")
+    status = db.relationship("Statuses", backref="budget")
+    transactions = db.relationship("Transactions", backref="budget", lazy="select")
 
     __table_args__ = (
         db.CheckConstraint("budget_month BETWEEN 1 AND 12", name="check_budget_month"),
@@ -77,13 +49,28 @@ class Budgets(db.Model):
     )
 
 
-class Incomes(db.Model):
-    __tablename_ = "incomes"
-    income_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
-    category_id = db.Column(
-        db.Integer, db.ForeignKey("income_categories.category_id"), nullable=False
+class Roles(db.Model):
+    __tablename__ = "roles"
+    id = db.Column(db.Integer, primary_key=True)
+    role_name = db.Column(db.String(100), nullable=False)
+
+
+class Statuses(db.Model):
+    __tablename__ = "statuses"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    type = db.Column(
+        db.String(100),
+        db.CheckConstraint("type IN ('users','budgets')"),
+        nullable=False,
     )
+
+
+class Transactions(db.Model):
+    __tablename__ = "transactions"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
     amount = db.Column(db.Numeric(12, 2), nullable=False)
     date = db.Column(db.DateTime, nullable=False)
     is_cyclical = db.Column(db.Boolean, nullable=False, default=False)
@@ -91,40 +78,23 @@ class Incomes(db.Model):
         db.DateTime, nullable=False, default=datetime.now(timezone.utc)
     )
     updated_at = db.Column(db.DateTime)
-    budget_id = db.Column(
-        db.Integer, db.ForeignKey("budgets.budget_id"), nullable=False
+    budget_id = db.Column(db.Integer, db.ForeignKey("budgets.id"), nullable=False)
+    type = db.Column(
+        db.String(20),
+        db.CheckConstraint("type IN ('income','expense')"),
+        nullable=False,
     )
 
-    budget = db.relationship("Budgets", backref="incomes")
-    user = db.relationship("Users", backref="incomes")
-    category = db.relationship("IncomeCategories", backref="incomes")
+    user = db.relationship("Users", backref="transactions")
+    category = db.relationship("Categories", backref="transactions")
 
 
-class ExpenseCategories(db.Model):
-    __tablename__ = "expense_categories"
-    category_id = db.Column(db.Integer, primary_key=True)
-    category_name = db.Column(db.String(255), nullable=False)
-
-
-class UserRoles(db.Model):
-    __tablename__ = "user_roles"
-    role_id = db.Column(db.Integer, primary_key=True)
-    role_name = db.Column(db.String(100), nullable=False)
-
-
-class UserStatuses(db.Model):
-    __tablename__ = "user_statuses"
-    status_id = db.Column(db.Integer, primary_key=True)
-    status_name = db.Column(db.String(100), nullable=False)
-
-
-class IncomeCategories(db.Model):
-    __tablename__ = "income_categories"
-    category_id = db.Column(db.Integer, primary_key=True)
-    category_name = db.Column(db.String(255))
-
-
-class BudgetStatuses(db.Model):
-    __tablename__ = "budget_statuses"
-    status_id = db.Column(db.Integer, primary_key=True)
-    status_name = db.Column(db.String(255))
+class Categories(db.Model):
+    __tablename__ = "categories"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    type = db.Column(
+        db.String(20),
+        db.CheckConstraint("type IN ('income','expense')"),
+        nullable=False,
+    )

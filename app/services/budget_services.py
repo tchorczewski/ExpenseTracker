@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import select, func
 from app.common.decorators import error_handler
 from db import db
-from db.models import Budgets, Users, Expenses, Incomes
+from db.models import Budgets, Users, Transactions
 from utils.mappers import budget_mapper
 from utils.validation import is_valid_date
 
@@ -12,8 +12,9 @@ from utils.validation import is_valid_date
 def get_budget_for_user(user_id: int, month: int, year: int):
     """
     Retrieve the budget for given user and date (format: 'YYYY-MM')
+    :param year: Budget's year
+    :param month: Budget's month
     :param user_id: ID of user stored in JWT
-    :param selected_date_str: Passed by the user in the request
     :return: Tuple (Budget object or None, error_message) if no budget found None, if no error, error_message is None
     """
 
@@ -31,10 +32,10 @@ def get_budget_for_user(user_id: int, month: int, year: int):
 
 def prepare_budget_data(data: dict, user_id: int):
     data["user_id"] = user_id
-    data["budget_amount"] = float(data.get("budget_amount", "0"))
+    data["amount"] = float(data.get("amount", "0"))
     data["budget_month"] = int(data["budget_month"])
     data["budget_year"] = int(data["budget_year"])
-    data["status_id"] = 1
+    data["status_id"] = 3
     data["created_at"] = datetime.now().strftime("%Y-%m-%d")
     data["updated_at"] = None
     return data
@@ -54,38 +55,3 @@ def verify_budget_change(user_id, date, current_budgets_id):
     if current_budgets_id == edited_budget["budget_id"]:
         return False, None, None
     return True, edited_budget["budget_id"], None
-
-
-def check_budget_generation_status(budget, user, budget_id):
-    if budget.is_generated:
-        expense_stmt = (
-            select(func.sum(Expenses.amount))
-            .join(Users, Expenses.user_id == Users.user_id)
-            .where(Users.user_id == user.user_id)
-            .where(Expenses.budget_id == budget_id)
-            .where(Expenses.is_cyclical == False)
-        )
-        income_stmt = (
-            select(func.sum(Incomes.amount))
-            .join(Users, Incomes.user_id == Users.user_id)
-            .where(Users.user_id == user.user_id)
-            .where(Incomes.budget_id == budget_id)
-            .where(Incomes.is_cyclical == False)
-        )
-    else:
-        expense_stmt = (
-            select(func.sum(Expenses.amount))
-            .join(Users, Expenses.user_id == Users.user_id)
-            .where(Users.user_id == user.user_id)
-            .where(Expenses.budget_id == budget_id)
-            .where(Expenses.is_cyclical == True)
-        )
-        income_stmt = (
-            select(func.sum(Incomes.amount))
-            .join(Users, Incomes.user_id == Users.user_id)
-            .where(Users.user_id == user.user_id)
-            .where(Incomes.budget_id == budget_id)
-            .where(Incomes.is_cyclical == True)
-        )
-
-    return expense_stmt, income_stmt

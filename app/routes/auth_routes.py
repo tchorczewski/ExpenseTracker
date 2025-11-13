@@ -51,9 +51,9 @@ def register_user():
         email=request.form["email"],
         first_name=request.form["first_name"],
         last_name=request.form["last_name"],
-        user_password=bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()),
-        user_status_id=5,
-        user_role_id=2,
+        password=bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()),
+        status_id=2,
+        role_id=1,
     )
 
     db.session.add(user)
@@ -61,13 +61,13 @@ def register_user():
     return (
         jsonify(
             {
-                "user_id": user.user_id,
+                "id": user.id,
                 "username": user.username,
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "status_id": user.user_status_id,
-                "role_id": user.user_role_id,
+                "status_id": user.status_id,
+                "role_id": user.role_id,
             }
         ),
         201,

@@ -3,13 +3,11 @@ from datetime import datetime
 from sqlalchemy import select
 
 from app.common.decorators import error_handler
-from app.services.budget_services import get_budget_for_user
 from db import db
-from db.models import Expenses
-from utils.mappers import expense_mapper
+from db.models import Transactions
 
 
-def prepare_expense_data(data: dict, user_id: int) -> (dict, str | None):
+def prepare_transaction_data(data: dict, user_id: int) -> (dict, str | None):
     """
     :param data: Dictionary form of data from request
     :param user_id: User_id from jwt identity
@@ -23,10 +21,11 @@ def prepare_expense_data(data: dict, user_id: int) -> (dict, str | None):
 
 
 @error_handler
-def get_cyclical_expenses(budget_id: int):
-    cyclical_expenses_stmt = select(Expenses.amount).filter(
-        Expenses.budget_id == budget_id,
-        Expenses.is_cyclical == True,
+def get_cyclical_transactions(budget_id: int):
+    cyclical_expenses_stmt = (
+        select(Transactions)
+        .where(Transactions.budget_id == budget_id, Transactions.is_cyclical == True)
+        .order_by(Transactions.type)
     )
     result = db.session.execute(cyclical_expenses_stmt).scalars().all()
     return result

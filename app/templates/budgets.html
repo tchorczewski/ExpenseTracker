@@ -128,147 +128,167 @@
     </div>
   </div>
 
-  <script>
-    const tableBody = document.querySelector("#budgetsTable tbody");
-    const editModal = new bootstrap.Modal(document.getElementById("editBudgetModal"));
-    const addModal = new bootstrap.Modal(document.getElementById("addBudgetModal"));
-    const editForm = document.getElementById("editBudgetForm");
-    const addForm = document.getElementById("addBudgetForm");
-    const editStatusSelect = document.getElementById("editBudgetStatus");
-    const addStatusSelect = document.getElementById("addBudgetStatus");
-    let statuses = [];
+<script>
+  const tableBody = document.querySelector("#budgetsTable tbody");
+  const editModal = new bootstrap.Modal(document.getElementById("editBudgetModal"));
+  const addModal = new bootstrap.Modal(document.getElementById("addBudgetModal"));
+  const editForm = document.getElementById("editBudgetForm");
+  const addForm = document.getElementById("addBudgetForm");
+  const editStatusSelect = document.getElementById("editBudgetStatus");
+  const addStatusSelect = document.getElementById("addBudgetStatus");
+  let statuses = [];
 
-    async function fetchStatuses() {
-      const res = await fetch("/api/budgets/get_statuses", {
-        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+  async function fetchStatuses() {
+    const res = await fetch("/api/budgets/get_statuses", {
+      headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    });
+    if (!res.ok) return alert("Failed to load statuses");
+
+    const data = await res.json();
+    statuses = data.budgets || []; // specifically get budget statuses
+    populateStatusDropdowns();
+  }
+
+  function populateStatusDropdowns() {
+    [editStatusSelect, addStatusSelect].forEach(select => {
+      select.innerHTML = "";
+      statuses.forEach(s => {
+        const option = document.createElement("option");
+        option.value = s.id;
+        option.textContent = s.name;
+        select.appendChild(option);
       });
-      if (!res.ok) return alert("Failed to load statuses");
-      statuses = await res.json();
-      populateStatusDropdowns();
+    });
+  }
+
+  async function loadBudgets() {
+    const res = await fetch("/api/budgets/get_all_budgets", {
+      headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    });
+    if (!res.ok) {
+      tableBody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">Failed to load budgets</td></tr>`;
+      return;
     }
+    const data = await res.json();
+    tableBody.innerHTML = "";
+    data.budgets.forEach(b => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${b.id}</td>
+        <td>${b.budget_month}</td>
+        <td>${b.budget_year}</td>
+        <td>${b.amount}</td>
+        <td>${b.status_name}</td>
+        <td>${b.created_at ?? ""}</td>
+        <td>${b.updated_at ?? ""}</td>
+        <td>${b.is_generated ? "Yes" : "No"}</td>
+        <td>
+            <button class="btn btn-sm btn-info" onclick="viewDetails(${b.id}, ${b.budget_month}, ${b.budget_year})">Details</button>
+            <button class="btn btn-sm btn-warning" onclick="openEditModal(${b.id})">Edit</button>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+  }
 
-    function populateStatusDropdowns() {
-      [editStatusSelect, addStatusSelect].forEach(select => {
-        select.innerHTML = "";
-        statuses.forEach(s => {
-          const option = document.createElement("option");
-          option.value = s.id;
-          option.textContent = s.name;
-          select.appendChild(option);
-        });
-      });
-    }
+function viewDetails(id, month, year) {
+  // store locally too (optional)
+  sessionStorage.setItem("selectedBudget", JSON.stringify({ id, month, year }));
 
-    async function loadBudgets() {
-      const res = await fetch("/api/budgets/get_all_budgets", {
-        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
-      });
-      if (!res.ok) {
-        tableBody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">Failed to load budgets</td></tr>`;
-        return;
-      }
-      const data = await res.json();
-      tableBody.innerHTML = "";
-      data.budgets.forEach(b => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${b.budget_id}</td>
-          <td>${b.budget_month}</td>
-          <td>${b.budget_year}</td>
-          <td>${b.budget_amount}</td>
-          <td>${b.status_name}</td>
-          <td>${b.created_at ?? ""}</td>
-          <td>${b.updated_at ?? ""}</td>
-          <td>${b.is_generated ? "Yes" : "No"}</td>
-          <td>
-            <button class="btn btn-sm btn-info" onclick="viewDetails(${b.budget_id})">Details</button>
-            <button class="btn btn-sm btn-warning" onclick="openEditModal(${b.budget_id})">Edit</button>
-          </td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
+  // pass context via query params
+  const query = new URLSearchParams({
+    budget_id: id,
+    month,
+    year
+  }).toString();
 
-    function viewDetails(id) {
-      window.location.href = `/operations?budget_id=${id}`;
-    }
+  window.location.href = `/operations?${query}`;
+}
 
-    async function openEditModal(id) {
-      const res = await fetch("/api/budgets/get_all_budgets", {
-        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
-      });
-      if (!res.ok) return alert("Failed to load budget");
-      const data = await res.json();
-      const budget = data.budgets.find(b => b.budget_id === id);
-      if (!budget) return alert("Budget not found");
+  async function openEditModal(id) {
+    const res = await fetch("/api/budgets/get_all_budgets", {
+      headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    });
+    if (!res.ok) return alert("Failed to load budget");
+    const data = await res.json();
+    const budget = data.budgets.find(b => b.id === id);
+    if (!budget) return alert("Budget not found");
 
-      document.getElementById("editBudgetId").value = budget.budget_id;
-      document.getElementById("editBudgetMonth").value = budget.budget_month;
-      document.getElementById("editBudgetYear").value = budget.budget_year;
-      document.getElementById("editBudgetAmount").value = budget.budget_amount;
-      editStatusSelect.value = statuses.find(s => s.name === budget.status_name)?.id || "";
+    document.getElementById("editBudgetId").value = budget.id;
+    document.getElementById("editBudgetMonth").value = budget.budget_month;
+    document.getElementById("editBudgetYear").value = budget.budget_year;
+    document.getElementById("editBudgetAmount").value = budget.amount;
+    editStatusSelect.value = statuses.find(s => s.name === budget.status_name)?.id || "";
 
-      editModal.show();
-    }
+    editModal.show();
+  }
 
-    editForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      const id = document.getElementById("editBudgetId").value;
-      const payload = {
-        budget_month: parseInt(document.getElementById("editBudgetMonth").value),
-        budget_year: parseInt(document.getElementById("editBudgetYear").value),
-        budget_amount: parseFloat(document.getElementById("editBudgetAmount").value),
-        status_id: parseInt(editStatusSelect.value)
-      };
-      const res = await fetch(`/api/budgets/${id}/edit_budget`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + localStorage.getItem("token")
-        },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        alert("Budget updated successfully!");
-        editModal.hide();
-        await loadBudgets();
-      } else {
-        alert("Failed to update budget");
-      }
+  editForm.addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const payload = {
+      id: parseInt(document.getElementById("editBudgetId").value),
+      budget_month: parseInt(document.getElementById("editBudgetMonth").value),
+      budget_year: parseInt(document.getElementById("editBudgetYear").value),
+      amount: parseFloat(document.getElementById("editBudgetAmount").value),
+      status_id: parseInt(editStatusSelect.value)
+    };
+
+    const res = await fetch("/api/budgets/edit_budget", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token")
+      },
+      body: JSON.stringify(payload)
     });
 
-    addForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      const payload = {
-        budget_month: parseInt(document.getElementById("addBudgetMonth").value),
-        budget_year: parseInt(document.getElementById("addBudgetYear").value),
-        budget_amount: parseFloat(document.getElementById("addBudgetAmount").value),
-        status_id: parseInt(addStatusSelect.value)
-      };
-      const res = await fetch("/api/budgets/create_budget", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + localStorage.getItem("token")
-        },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        alert("Budget created successfully!");
-        addModal.hide();
-        await loadBudgets();
-      } else {
-        const msg = (await res.json()).message || "Failed to create budget";
-        alert(msg);
-      }
+    if (res.ok) {
+      alert("Budget updated successfully!");
+      editModal.hide();
+      await loadBudgets();
+    } else {
+      alert("Failed to update budget");
+    }
+  });
+
+  addForm.addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const payload = {
+      budget_month: parseInt(document.getElementById("addBudgetMonth").value),
+      budget_year: parseInt(document.getElementById("addBudgetYear").value),
+      amount: parseFloat(document.getElementById("addBudgetAmount").value),
+      status_id: parseInt(addStatusSelect.value)
+    };
+
+    const res = await fetch("/api/budgets/create_budget", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token")
+      },
+      body: JSON.stringify(payload)
     });
 
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.removeItem("token");
-      window.location.href = "/login";
-    });
+    if (res.ok) {
+      alert("Budget created successfully!");
+      addModal.hide();
+      await loadBudgets();
+    } else {
+      const msg = (await res.json()).message || "Failed to create budget";
+      alert(msg);
+    }
+  });
 
-    fetchStatuses().then(loadBudgets);
-  </script>
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  });
+
+  fetchStatuses().then(loadBudgets);
+</script>
+
+
 </body>
 </html>

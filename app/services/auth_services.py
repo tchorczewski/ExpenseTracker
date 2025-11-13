@@ -12,7 +12,7 @@ def _get_current_user(user_id: int):
     :param user_id: User_id taken from JWT Identity
     :return: Returns the result of check if user with such an id exists in the db.
     """
-    user = Users.query.filter_by(user_id=user_id).first()
+    user = Users.query.filter_by(id=user_id).first()
     return user
 
 
@@ -39,11 +39,11 @@ def verify_user(username, password):
     user = Users.query.filter_by(username=username).first_or_404()
     status = bcrypt.checkpw(
         password.encode("utf-8"),
-        user.user_password,
+        user.password,
     )
     if status:
         return (
             status,
-            user.user_id,
+            user.id,
         )
     return False, None

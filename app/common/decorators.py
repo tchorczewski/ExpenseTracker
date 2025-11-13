@@ -26,7 +26,7 @@ def handle_error(exc: Exception):
 
 @handle_error.register(ValueError)
 def _(exc: ValueError):
-    return jsonify({"error": f"Incorrect Value {exc}"})
+    return jsonify({"error": f"Incorrect Value {exc}"}), 400
 
 
 @handle_error.register(IntegrityError)

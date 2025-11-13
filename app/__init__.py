@@ -14,11 +14,9 @@ from .celery_app import celery_init_app
 from .config import Config
 from datetime import timedelta, datetime
 from .routes.auth_routes import auth_bp
-from .routes.budget_operations_routes import operations_bp
 from .routes.budget_routes import budget_bp
 from .routes.dashboard_routes import dashboard_bp
-from .routes.expense_routes import expense_bp
-from .routes.income_routes import income_bp
+from .routes.transaction_routes import transaction_bp
 from .routes.swagger import swagger_bp
 
 from .routes.ui_routes import main_bp
@@ -34,11 +32,9 @@ def create_app():
     with app.app_context():
         db.create_all()
     app.register_blueprint(main_bp)
-    app.register_blueprint(expense_bp, url_prefix="/api/expenses")
+    app.register_blueprint(transaction_bp, url_prefix="/api/transactions")
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(budget_bp, url_prefix="/api/budgets")
-    app.register_blueprint(income_bp, url_prefix="/api/incomes")
-    app.register_blueprint(operations_bp, url_prefix="/api/operations")
     app.register_blueprint(swagger_bp, prefix=getenv("SWAGGER_URL"))
     app.register_blueprint(dashboard_bp, url_prefix="/api/dashboard")
 

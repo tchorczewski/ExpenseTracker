@@ -4,14 +4,13 @@ from app.common.decorators import error_handler
 from app.services.auth_services import get_auth_user
 from app.services.dashboard_services import (
     get_recent_operations,
-    get_curr_month_expenses,
-    get_curr_month_incomes,
+    get_curr_month_transactions,
 )
 
 dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
 
-@dashboard_bp.route("/get_last_operations", methods=["GET"])
+@dashboard_bp.route("/get_last_transactions", methods=["GET"])
 @error_handler
 @jwt_required()
 def get_last_operations():
@@ -34,7 +33,7 @@ def plot_expenses():
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
-    data = get_curr_month_expenses()
+    data = get_curr_month_transactions(user.id)["expense"]
     return jsonify(data), 201
 
 
@@ -45,5 +44,5 @@ def plot_incomes():
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
-    data = get_curr_month_incomes()
+    data = get_curr_month_transactions(user.id)["income"]
     return jsonify(data), 201

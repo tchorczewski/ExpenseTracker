@@ -1,10 +1,10 @@
 def budget_mapper(budget, budget_status=""):
     return {
-        "budget_id": budget.budget_id,
+        "id": budget.id,
         "user_id": budget.user_id,
         "budget_month": budget.budget_month,
         "budget_year": budget.budget_year,
-        "budget_amount": budget.budget_amount,
+        "amount": budget.amount,
         "status_id": budget.status_id,
         "status_name": budget_status,
         "is_generated": budget.is_generated,
@@ -15,53 +15,42 @@ def budget_mapper(budget, budget_status=""):
     }
 
 
-def expense_mapper(expense, category=""):
+def transaction_mapper(transaction, category=""):
     return {
-        "expense_id": expense.expense_id,
+        "id": transaction.id,
+        "user_id": transaction.user_id,
+        "category_id": transaction.category_id,
         "category_name": category,
-        "amount": expense.amount,
-        "user_id": expense.user_id,
-        "date": expense.date.strftime("%Y-%m-%d"),
-        "is_cyclical": expense.is_cyclical,
-        "created_at": expense.created_at.strftime("%Y-%m-%d"),
+        "amount": transaction.amount,
+        "date": transaction.date.strftime("%Y-%m-%d"),
+        "is_cyclical": transaction.is_cyclical,
+        "budget_id": transaction.budget_id,
+        "created_at": transaction.created_at.strftime("%Y-%m-%d"),
         "updated_at": (
-            expense.updated_at.strftime("%Y-%m-%d") if expense.updated_at else None
+            transaction.updated_at.strftime("%Y-%m-%d")
+            if transaction.updated_at
+            else None
         ),
-        "budget_id": expense.budget_id,
-    }
-
-
-def income_mapper(income, category=""):
-    return {
-        "income_id": income.income_id,
-        "user_id": income.user_id,
-        "category_name": category,
-        "amount": income.amount,
-        "date": income.date.strftime("%Y-%m-%d"),
-        "is_cyclical": income.is_cyclical,
-        "budget_id": income.budget_id,
-        "created_at": income.created_at.strftime("%Y-%m-%d"),
-        "updated_at": (
-            income.updated_at.strftime("%Y-%m-%d") if income.updated_at else None
-        ),
+        "type": transaction.type,
     }
 
 
 def last_operations_mapper(last_operations):
     return {
-        "type": f"{'Expense' if last_operations.category_name in {'Housing', 'Transportation','Food & Groceries', "Entertainment", "Healthcare" } else 'Income'}",
+        "type": last_operations.type,
         "amount": last_operations.amount,
         "date": last_operations.date.strftime("%Y-%m-%d"),
-        "category_name": last_operations.category_name,
+        "category_name": last_operations.name,
     }
 
 
 def status_mapper(status):
-    return {"id": status.status_id, "name": status.status_name}
+    return {"id": status.id, "name": status.name, "type": status.type}
 
 
 def category_mapper(category):
     return {
-        "id": category.category_id,
-        "name": category.category_name,
+        "id": category.id,
+        "name": category.name,
+        "type": category.type,
     }

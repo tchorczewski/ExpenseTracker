@@ -2,16 +2,13 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select, func, not_
-from sqlalchemy.exc import OperationalError, IntegrityError
 from sqlalchemy.inspection import inspect
 
 from app.common.decorators import error_handler
-from app.services.expenses_services import get_cyclical_expenses
-from app.services.income_services import get_cyclical_incomes
+from app.services.transactions_services import get_cyclical_transactions
 from db import db
 from app.services.date_services import get_previous_month, set_next_month
-from db.models import Budgets, Users, Incomes, Expenses
-from concurrent.futures import ThreadPoolExecutor
+from db.models import Budgets, Users, Transactions
 
 
 @error_handler
@@ -30,31 +27,31 @@ def get_users_with_missing_budget() -> dict[str, str] | set[Any]:
     return set(db.session.execute(missing_budget_users_stmt).scalars().all())
 
 
-def get_cyclical_data(budget_id: int) -> tuple:
+def get_cyclical_data(budget_id: int):
     """
-    Performs calls to db to get cyclical incomes and expenses and returns them as a Tuple
+    Gets transactions marked as cyclical
     :param budget_id: Budget_id for which the cyclical incomes and expenses are to be returned
-    :return: Tuple of all cyclical incomes and expenses for given budget
+    :return:
     """
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        previous_incomes = executor.submit(get_cyclical_incomes, budget_id)
-        previous_expenses = executor.submit(get_cyclical_expenses, budget_id)
+    transactions = get_cyclical_transactions(budget_id)
 
-        incomes = previous_incomes.result()
-        expenses = previous_expenses.result()
-
-        return incomes, expenses
+    return transactions
 
 
-def calculate_budget_amount(incomes: list, expenses: list) -> float:
+def calculate_budget_amount(transactions: list[Transactions]) -> float:
     """
-    :param incomes: Incomes for given budget
-    :param expenses: Expenses for given budget
-    :return: Sum of incomes and expenses
+    Calculates the budget for given month based on cyclical transactions
+    :param transactions: List of cyclical transactions
+    :return:
     """
-    return sum(item.get("amount", 0) for item in incomes) - sum(
-        item.get("amount", 0) for item in expenses
-    )
+    incomes = expenses = 0
+    for t in transactions:
+        if t["type"] == "income":
+            incomes += t["amount"]
+        else:
+            expenses += t["amount"]
+
+    return incomes - expenses
 
 
 def clone_budget(
@@ -75,9 +72,7 @@ def clone_budget(
 
 
 @error_handler
-def push_data(
-    data: list[Budgets | Incomes | Expenses],
-):
+def push_data(data: list[Budgets | Transactions]) -> bool:
     db.session.add_all(data)
     db.session.commit()
     return True
@@ -86,43 +81,23 @@ def push_data(
 # TODO Create abstract method to clone incomes/expenses
 
 
-def clone_incomes(
-    budget_id, incomes: list[Incomes], exclude_fields=("budget_id", "updated_at")
+def clone_transactions(
+    budget_id: int,
+    transactions: list[Transactions],
+    exclude_fields=("budget_id", "updated_at"),
 ):
-    incomes = [
-        Incomes(
+    cloned = [
+        Transactions(
             **{
                 **{
-                    column.key: getattr(income, column.key)
-                    for column in inspect(Incomes).column_attrs
+                    column.key: getattr(transaction, column.key)
+                    for column in inspect(Transactions).column_attrs
                     if column.key not in exclude_fields
                 },
                 "budget_id": budget_id,
-                "income_date": set_next_month(income.income_date),
+                "date": set_next_month(transaction.date),
             }
         )
-        for income in incomes
+        for transaction in transactions
     ]
-    return incomes
-
-
-def clone_expenses(
-    budget_id,
-    expenses: list[Expenses],
-    exclude_fields=("budget_id", "updated_at", "created_at"),
-):
-    expenses = [
-        Expenses(
-            **{
-                **{
-                    column.key: getattr(expense, column.key)
-                    for column in inspect(Expenses).column_attrs
-                    if column.key not in exclude_fields
-                },
-                "budget_id": budget_id,
-                "expense_date": set_next_month(expense.expense_date),
-            }
-        )
-        for expense in expenses
-    ]
-    return expenses
+    return cloned

@@ -5,8 +5,7 @@ from app.services.budget_task_services import (
     calculate_budget_amount,
     clone_budget,
     push_data,
-    clone_incomes,
-    clone_expenses,
+    clone_transactions,
 )
 from app.services.date_services import get_previous_month, parse_date
 from main import celery
@@ -21,11 +20,10 @@ def create_next_month_budget():
         budget, _, _ = get_budget_for_user(
             user, parse_date(previous_year, previous_month)
         )
-        incomes, expenses = get_cyclical_data(budget.budget_id)
-        budget_amount = calculate_budget_amount(incomes, expenses)
+        transactions = get_cyclical_data(budget.budget_id)
+        budget_amount = calculate_budget_amount(transactions)
         prepared_budget = clone_budget(budget, budget_amount)
         data.append(prepared_budget)
-        data.extend(clone_incomes(budget.budget_id, incomes))
-        data.extend(clone_expenses(budget.budget_id, expenses))
+        data.extend(clone_transactions(budget.budget_id, transactions))
 
     push_data(data)

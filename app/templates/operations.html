@@ -7,44 +7,100 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <style>
-    body { padding: 1rem; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-    .table-container { max-height: 60vh; overflow-y: auto; }
-    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
-    .switch-add { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; gap:1rem; }
+    body {
+      display: flex;
+      height: 100vh;
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #212529;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sidebar .nav-link {
+      color: white;
+    }
+    .sidebar .nav-link.active {
+      background-color: #0d6efd;
+    }
+    .sidebar .logout {
+      margin: 1rem;
+    }
+    .content {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .switch-add {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:1rem;
+      gap:1rem;
+    }
+    .table-container {
+      max-height: 60vh;
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body>
-  <div class="top-bar">
-    <h4 id="budgetTitle">Budget Details</h4>
-    <a href="/budgets" class="btn btn-outline-secondary">← Back to Budgets</a>
+
+  <!-- Sidebar -->
+  <div class="sidebar p-3">
+    <div>
+      <h4 class="mb-3">Menu</h4>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="/dashboard">Dashboard</a>
+        <a class="nav-link" href="/budgets">Budgets</a>
+        <a class="nav-link active" href="#">Operations</a>
+      </nav>
+    </div>
+    <div class="logout">
+      <a href="/logout" class="btn btn-danger w-100">Logout</a>
+    </div>
   </div>
 
-  <div class="switch-add">
-    <div>
-      <button id="addBtn" class="btn btn-primary">Add</button>
+  <!-- Content -->
+  <div class="content">
+    <div class="top-bar">
+      <h4 id="budgetTitle">Budget Details</h4>
+      <a href="/budgets" class="btn btn-outline-secondary">← Back to Budgets</a>
     </div>
-    <div>
+
+    <div class="switch-add">
+      <button id="addBtn" class="btn btn-primary">Add</button>
       <div class="form-check form-switch">
         <input class="form-check-input" id="opsToggle" type="checkbox" />
         <label class="form-check-label" for="opsToggle" id="opsLabel">Incomes</label>
       </div>
     </div>
-  </div>
 
-  <div class="table-container">
-    <table class="table table-striped align-middle" id="opsTable">
-      <thead class="table-dark">
-        <tr>
-          <th>ID</th>
-          <th>Date</th>
-          <th>Category</th>
-          <th>Amount</th>
-          <th>Cyclical</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="opsTBody"></tbody>
-    </table>
+    <div class="table-container">
+      <table class="table table-striped align-middle" id="opsTable">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Cyclical</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="opsTBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Add Modal -->
@@ -121,23 +177,20 @@ const opsTBody   = document.getElementById('opsTBody');
 const opsToggle  = document.getElementById('opsToggle');
 const opsLabel   = document.getElementById('opsLabel');
 const addBtn     = document.getElementById('addBtn');
+const addForm    = document.getElementById('addForm');
+const editForm   = document.getElementById('editForm');
+const addModal   = new bootstrap.Modal(document.getElementById('addModal'));
+const editModal  = new bootstrap.Modal(document.getElementById('editModal'));
 
-const addModal    = new bootstrap.Modal(document.getElementById('addModal'));
-const editModal   = new bootstrap.Modal(document.getElementById('editModal'));
-
-const addForm     = document.getElementById('addForm');
 const addAmount   = document.getElementById('addAmount');
 const addCategory = document.getElementById('addCategory');
 const addDate     = document.getElementById('addDate');
 const addCyclical = document.getElementById('addCyclical');
-
-const editForm     = document.getElementById('editForm');
 const editId       = document.getElementById('editId');
 const editAmount   = document.getElementById('editAmount');
 const editCategory = document.getElementById('editCategory');
 const editDate     = document.getElementById('editDate');
 const editCyclical = document.getElementById('editCyclical');
-
 const budgetTitle  = document.getElementById('budgetTitle');
 
 let budgetId = null;
@@ -145,79 +198,81 @@ let budgetMonth = null;
 let budgetYear = null;
 let dateMin = null;
 let dateMax = null;
-
-let dataCache = { incomes: [], expenses: [] };
-
-function getBudgetIdFromURL() {
-  return new URLSearchParams(window.location.search).get('budget_id');
-}
+let dataCache = { income: [], expense: [] };
+let categories = { income: [], expense: [] };
 
 function pad(n){ return n<10 ? '0'+n : ''+n; }
-
 function setDateBoundsFromMonthYear(year, month) {
-  const first = new Date(year, month -1, 1);
+  const first = new Date(year, month - 1, 1);
   const last  = new Date(year, month, 0);
   dateMin = `${first.getFullYear()}-${pad(first.getMonth()+1)}-${pad(first.getDate())}`;
   dateMax = `${last.getFullYear()}-${pad(last.getMonth()+1)}-${pad(last.getDate())}`;
-  addDate.min = dateMin; addDate.max = dateMax;
-  editDate.min = dateMin; editDate.max = dateMax;
+  if (addDate) { addDate.min = dateMin; addDate.max = dateMax; }
+  if (editDate) { editDate.min = dateMin; editDate.max = dateMax; }
 }
 
-async function fetchCategories(type) {
-  const endpoint = type === 'incomes' ? '/api/incomes/get_categories' : '/api/expenses/get_categories';
-  const res = await fetch(endpoint, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }});
-  if (!res.ok) { alert('Failed load categories'); return []; }
-  return res.json();
+async function fetchAllTransactionCategories() {
+  try {
+    const res = await fetch('/api/transactions/get_categories', {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+    });
+    if (!res.ok) throw new Error('Failed to load categories');
+    const data = await res.json();
+    categories.income = data.income ?? [];
+    categories.expense = data.expense ?? [];
+    return categories;
+  } catch (err) {
+    console.warn('fetchAllTransactionCategories fallback', err);
+    return categories;
+  }
 }
 
-function fillSelectWithCategories(selectEl, categories, selectedId=null) {
-  selectEl.innerHTML = '';
-  categories.forEach(c => {
+function fillSelect(select, cats, selected = null) {
+  select.innerHTML = '';
+  (cats || []).forEach(c => {
     const id = c.id ?? c.category_id;
     const name = c.name ?? c.category_name;
     const opt = document.createElement('option');
     opt.value = id;
     opt.textContent = name;
-    if (String(selectedId) === String(id)) opt.selected = true;
-    selectEl.appendChild(opt);
+    if (String(selected) === String(id)) opt.selected = true;
+    select.appendChild(opt);
   });
 }
 
 function renderTable() {
-  const type = opsToggle.checked ? 'expenses' : 'incomes';
+  const type = opsToggle.checked ? 'expense' : 'income';
   opsLabel.textContent = opsToggle.checked ? 'Expenses' : 'Incomes';
   const list = dataCache[type] || [];
   opsTBody.innerHTML = '';
   if (!list.length) {
-    opsTBody.innerHTML = `<tr><td colspan="6" class="text-center">No ${type} yet</td></tr>`;
+    opsTBody.innerHTML = `<tr><td colspan="6" class="text-center">No ${type}</td></tr>`;
     return;
   }
   list.forEach(item => {
-    const id = item.income_id ?? item.expense_id ?? item.id;
-    const rawDate = item.income_date ?? item.expense_date ?? item.date ?? item.created_at;
-    const date = rawDate ? (rawDate.split ? rawDate.split('T')[0] : rawDate) : '-';
-    const catName = item.category_name ?? item.category ?? '-';
-    const amount = item.amount ?? '-';
-    const cyc = (item.is_cyclical === true || item.is_cyclical === 'true') ? '✅' : '❌';
+    const id = item.id;
+    const raw = item.date ?? item.created_at ?? '';
+    const date = raw && raw.split ? raw.split('T')[0] : raw;
+    const cyc = (item.is_cyclical === true || item.is_cyclical === 'true') ? 'Yes' : 'No';
+    const catName = item.category_name ?? '-';
     opsTBody.insertAdjacentHTML('beforeend', `
       <tr>
         <td>${id}</td>
         <td>${date}</td>
         <td>${catName}</td>
-        <td>${amount}</td>
+        <td>${item.amount}</td>
         <td>${cyc}</td>
         <td>
           <button class="btn btn-sm btn-warning me-1" onclick="onEdit(${id}, '${type}')">Edit</button>
-          <button class="btn btn-sm btn-danger" onclick="onDelete(${id}, '${type}')">Delete</button>
+          <button class="btn btn-sm btn-danger" onclick="onDelete(${id})">Delete</button>
         </td>
       </tr>
     `);
   });
 }
 
-async function loadBudgetDetails(bId) {
-  budgetId = bId;
-  const res = await fetch(`/api/budgets/${bId}/get_budget_details`, {
+async function loadBudgetDetails() {
+  const res = await fetch(`/api/budgets/${budgetId}/get_budget_details`, {
     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
   });
   if (!res.ok) {
@@ -225,146 +280,88 @@ async function loadBudgetDetails(bId) {
     return;
   }
   const payload = await res.json();
-  dataCache.expenses = payload.expenses ?? payload[0] ?? [];
-  dataCache.incomes  = payload.incomes  ?? payload[1] ?? [];
-  const d = payload.date ? new Date(payload.date) : new Date();
-  budgetMonth = d.getMonth()+1; budgetYear = d.getFullYear();
-  setDateBoundsFromMonthYear(budgetYear, budgetMonth);
-  budgetTitle.textContent = `Budget #${budgetId} — ${pad(budgetMonth)}/${budgetYear}`;
+  dataCache.expense = payload.expense ?? [];
+  dataCache.income = payload.income ?? [];
   renderTable();
 }
 
+/* --- ADD flow --- */
 addBtn.addEventListener('click', async () => {
-  const type = opsToggle.checked ? 'expenses' : 'incomes';
-  const cats = await fetchCategories(type);
-  fillSelectWithCategories(addCategory, cats);
+  await fetchAllTransactionCategories();
+  const type = opsToggle.checked ? 'expense' : 'income';
+  fillSelect(addCategory, categories[type]);
   addForm.reset();
-  addDate.value = dateMin ?? new Date().toISOString().split('T')[0];
-  addCyclical.checked = false;
-  document.getElementById('addModalLabel').textContent = `Add ${type.slice(0, -1).charAt(0).toUpperCase() + type.slice(1, -1)}`;
+  addDate.min = dateMin;
+  addDate.max = dateMax;
+  addDate.value = dateMin;
+  document.getElementById('addModalLabel').textContent = `Add ${type}`;
   addModal.show();
 });
 
-addForm.addEventListener('submit', async (e) => {
+addForm.addEventListener('submit', async e => {
   e.preventDefault();
-  const type = opsToggle.checked ? 'expenses' : 'incomes';
-  const endpoint = type === 'expenses' ? '/api/expenses/add_expense' : '/api/incomes/add_income';
-  const payload = {
-    amount: parseFloat(addAmount.value),
-    category_id: parseInt(addCategory.value),
-    date: addDate.value,
-    is_cyclical: Boolean(addCyclical.checked),
-    budget_id: Number(budgetId)
-  };
-  const res = await fetch(endpoint, {
+  const type = opsToggle.checked ? 'expense' : 'income';
+  const res = await fetch('/api/transactions/add_transaction', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + localStorage.getItem('token')
-    },
-    body: JSON.stringify(payload)
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+    body: JSON.stringify({
+      budget_id: Number(budgetId),
+      type,
+      amount: parseFloat(addAmount.value),
+      category_id: parseInt(addCategory.value),
+      date: addDate.value,
+      is_cyclical: addCyclical.checked
+    })
   });
   if (res.ok) {
     addModal.hide();
-    await loadBudgetDetails(budgetId);
+    await loadBudgetDetails();
   } else {
-    const err = await res.json().catch(()=>({message:'Error'}));
-    alert('Failed to add: ' + (err.message || res.status));
+    alert('Failed to add');
   }
 });
 
-window.onEdit = async function(id, type) {
-  opsToggle.checked = (type === 'expenses');
-  opsLabel.textContent = opsToggle.checked ? 'Expenses' : 'Incomes';
-  const list = dataCache[type] || [];
-  const item = list.find(x => String(x.income_id ?? x.expense_id ?? x.id) === String(id));
-  if (!item) { alert('Item not found'); return; }
-  const cats = await fetchCategories(type);
-  fillSelectWithCategories(editCategory, cats, item.category_id);
-  editId.value = id;
-  editAmount.value = item.amount ?? '';
-  const rawDate = item.income_date ?? item.expense_date ?? item.date ?? '';
-  editDate.value = rawDate ? (rawDate.split ? rawDate.split('T')[0] : rawDate) : (dateMin ?? '');
-  editCyclical.checked = (item.is_cyclical === true || item.is_cyclical === 'true');
-  document.getElementById('editModalLabel').textContent = `Edit ${type.slice(0, -1).charAt(0).toUpperCase() + type.slice(1, -1)}`;
-  editModal.show();
-};
-
-editForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const type = opsToggle.checked ? 'expenses' : 'incomes';
-  const id = parseInt(editId.value);
-  const endpoint = type === 'expenses'
-    ? '/api/expenses/edit_expense'
-    : '/api/incomes/edit_income';
-  const payload = {
-    amount: parseFloat(editAmount.value),
-    category_id: parseInt(editCategory.value),
-    date: editDate.value,
-    is_cyclical: Boolean(editCyclical.checked)
-  };
-  // ✅ Add ID to body
-  if (type === 'expenses') payload.expense_id = id;
-  else payload.income_id = id;
-
-  const res = await fetch(endpoint, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + localStorage.getItem('token')
-    },
-    body: JSON.stringify(payload)
-  });
-  if (res.ok) {
-    editModal.hide();
-    await loadBudgetDetails(budgetId);
-  } else {
-    const err = await res.json().catch(()=>({message:'Error'}));
-    alert('Failed to edit: ' + (err.message || res.status));
-  }
-});
-
-/* --------- Delete --------- */
-window.onDelete = async function(id, type) {
+/* --- DELETE flow --- */
+window.onDelete = async id => {
   if (!confirm('Are you sure?')) return;
-
-  const endpoint = type === 'expenses'
-    ? '/api/expenses/delete_expense'
-    : '/api/incomes/delete_income';
-
-  const key = type === 'expenses' ? 'expense_id' : 'income_id';
-  const payload = {};
-  payload[key] = Number(id);
-
-  const res = await fetch(endpoint, {
+  const res = await fetch('/api/transactions/delete_transaction', {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + localStorage.getItem('token')
-    },
-    body: JSON.stringify(payload)
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+    body: JSON.stringify({ id })
   });
-
-  if (res.ok) {
-    dataCache[type] = (dataCache[type] || []).filter(x =>
-      String(x.income_id ?? x.expense_id ?? x.id) !== String(id)
-    );
-    renderTable();
-  } else {
-    const err = await res.json().catch(()=>({message:'Error'}));
-    alert('Delete failed: ' + (err.message || res.status));
-  }
+  if (res.ok) await loadBudgetDetails();
+  else alert('Delete failed');
 };
 
-
+/* --- INIT --- */
 document.addEventListener('DOMContentLoaded', async () => {
-  const id = getBudgetIdFromURL();
-  if (!id) {
-    opsTBody.innerHTML = `<tr><td colspan="6" class="text-danger text-center">Missing budget_id query param</td></tr>`;
+  const params = new URLSearchParams(window.location.search);
+  const fromURL = {
+    id: params.get('budget_id'),
+    month: params.get('month'),
+    year: params.get('year')
+  };
+
+  // Prefer URL params, fallback to sessionStorage
+  const saved = JSON.parse(sessionStorage.getItem('selectedBudget')) || {};
+  budgetId = fromURL.id || saved.id;
+  budgetMonth = fromURL.month || saved.month;
+  budgetYear = fromURL.year || saved.year;
+
+  if (!budgetId) {
+    opsTBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">No budget data</td></tr>`;
     return;
   }
-  await loadBudgetDetails(id);
-  opsToggle.addEventListener('change', () => renderTable());
+
+  // Update sessionStorage in case we came only from URL
+  sessionStorage.setItem('selectedBudget', JSON.stringify({ id: budgetId, month: budgetMonth, year: budgetYear }));
+
+  setDateBoundsFromMonthYear(budgetYear, budgetMonth);
+  budgetTitle.textContent = `Budget #${budgetId} — ${pad(budgetMonth)}/${budgetYear}`;
+
+  await fetchAllTransactionCategories();
+  await loadBudgetDetails();
+  opsToggle.addEventListener('change', renderTable);
 });
 </script>
 </body>
