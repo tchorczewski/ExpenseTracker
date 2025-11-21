@@ -3,7 +3,6 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
     create_access_token,
     set_access_cookies,
-    jwt_required,
     unset_jwt_cookies,
 )
 
