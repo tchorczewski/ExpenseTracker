@@ -61,14 +61,6 @@ def is_valid_amount(amount) -> bool:
         return False
 
 
-def is_valid_category(cat_id) -> bool:
-    try:
-        cat_id = int(cat_id)
-        return 1 <= cat_id <= 5
-    except (ValueError, TypeError):
-        return False
-
-
 def is_valid_type(transaction_type) -> bool:
     return transaction_type in ["expense", "income"]
 
@@ -88,14 +80,12 @@ def validate_transaction(data):
         "type",
     ]
     for field in required_fields:
-        if field not in data or not data[field]:
+        if field not in data or data[field] is None:
             return False, f"Missing required field: {field}"
     if not is_valid_amount(data["amount"]):
         return False, "Incorrect value passed as amount"
     if not is_valid_date(data["date"]):
         return False, "Incorrect date format, should be YYYY-MM-DD"
-    if not is_valid_category(int(data["category_id"])):
-        return False, "Category not found"
     if not is_valid_type(data["type"]):
         return False, "Incorrect transaction type"
 
@@ -139,10 +129,6 @@ def validate_transaction_edit(data):
         if not is_valid_amount(data["amount"]):
             errors["amount"] = "Incorrect value passed as amount"
 
-    if "category_id" in data:
-        if not is_valid_category(data["category_id"]):
-            errors["category_id"] = "Incorrect category id passed"
-
     if errors:
         return False, errors
     return True, errors
@@ -164,8 +150,6 @@ def validate_budget_edit(data):
         errors["year"] = (
             f"Invalid year (should be between 1922 and {datetime.now().year + 10})"
         )
-    if "status_id" in data and not is_valid_category(data["status_id"]):
-        errors["status"] = "Invalid status"
 
     if errors:
         return False, errors

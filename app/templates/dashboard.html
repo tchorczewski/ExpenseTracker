@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard</title>
+  <title>Expense Tracker</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
@@ -84,11 +84,11 @@
 
   <!-- Main Content -->
   <div class="content">
-    <h2 class="mb-4">Dashboard Overview</h2>
+    <h2 class="mb-4">Months overview</h2>
 
     <div class="chart-container">
-      <div class="chart" id="expenses_chart">Loading expenses...</div>
-      <div class="chart" id="incomes_chart">Loading incomes...</div>
+      <div class="chart" id="expenses_chart"></div>
+      <div class="chart" id="incomes_chart"></div>
     </div>
 
     <div class="table-section">
@@ -157,6 +157,7 @@
       const container = document.getElementById("expenses_chart");
       try {
         const response = await fetch("/api/dashboard/get_curr_expenses");
+        const data = await response.json();
         const categories = data.map(item => item.Category);
         const amounts = data.map(item => parseFloat(item.Amount));
         const trace = { x: categories || [], y: amounts || [], type: 'bar', marker: { color: 'tomato' } };

@@ -29,8 +29,10 @@ def get_users_transactions():
     transactions_list = [
         transaction_mapper(transaction) for transaction in transactions
     ]
-    response = {"expenses": transactions_list}
-    return jsonify(response), 200
+    types = {"income": [], "expense": []}
+    for t in transactions_list:
+        types[t["type"]].append(t)
+    return jsonify(types), 200
 
 
 @transaction_bp.route("/add_transaction", methods=["POST"])
@@ -42,7 +44,6 @@ def create_transaction():
         return error_response, status_code
 
     raw_data = request.get_json()
-
     is_valid, error_msg = validation.validate_transaction(raw_data)
     if not is_valid:
         return jsonify({"message": error_msg}), 400
@@ -51,7 +52,6 @@ def create_transaction():
     if error_msg:
         return jsonify({"message": f"Something went wrong {error_msg}"}), 400
 
-    print(data)
     transaction = Transactions(**data)
     db.session.add(transaction)
     db.session.commit()

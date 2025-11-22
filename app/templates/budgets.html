@@ -181,7 +181,7 @@
         <td>${b.status_name}</td>
         <td>${b.created_at ?? ""}</td>
         <td>${b.updated_at ?? ""}</td>
-        <td>${b.is_generated ? "Yes" : "No"}</td>
+        <td>${b.is_cyclical ? "Yes" : "No"}</td>
         <td>
             <button class="btn btn-sm btn-info" onclick="viewDetails(${b.id}, ${b.budget_month}, ${b.budget_year})">Details</button>
             <button class="btn btn-sm btn-warning" onclick="openEditModal(${b.id})">Edit</button>
