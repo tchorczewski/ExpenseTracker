@@ -13,6 +13,10 @@ from db.models import Budgets, Users, Transactions
 
 @error_handler
 def get_users_with_missing_budget() -> dict[str, str] | set[Any]:
+    """
+    Gets a list of users, that don't have a budget for current month.
+    :return: Set of users.
+    """
     previous_year, previous_month = get_previous_month()
     current_year, current_month = datetime.now().year, datetime.now().month
     current_month_subq = select(Budgets.user_id).filter(
@@ -76,9 +80,6 @@ def push_data(data: list[Budgets | Transactions]) -> bool:
     db.session.add_all(data)
     db.session.commit()
     return True
-
-
-# TODO Create abstract method to clone incomes/expenses
 
 
 def clone_transactions(

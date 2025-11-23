@@ -154,3 +154,21 @@ def validate_budget_edit(data):
     if errors:
         return False, errors
     return True, {}
+
+
+def validate_register(data):
+    errors = {}
+    required_fields = ["username", "first_name", "last_name", "email", "password"]
+    for field in data:
+        if field not in required_fields:
+            errors["required_fields"] = f"Missing required field: {field}"
+
+    if not is_valid_password(data["password"]):
+        errors["password"] = (
+            "Password must be at least 8 characters long, contain a number and a letter"
+        )
+    if not is_valid_email(data["email"]):
+        errors["email"] = "Invalid email"
+    if errors:
+        return False, errors
+    return True, {}

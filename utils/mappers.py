@@ -54,3 +54,15 @@ def category_mapper(category):
         "name": category.name,
         "type": category.type,
     }
+
+
+def user_mapper(user):
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "status_id": user.status_id,
+        "role_id": user.role_id,
+    }

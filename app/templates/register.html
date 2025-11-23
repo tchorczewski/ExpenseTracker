@@ -53,7 +53,7 @@
       const formData = new FormData(this);
 
       try {
-        const response = await fetch("{{ url_for('auth.register_user') }}", {
+        const response = await fetch("{{ url_for('auth.register') }}", {
           method: "POST",
           body: formData
         });

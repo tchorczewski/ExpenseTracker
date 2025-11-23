@@ -22,6 +22,7 @@ def prepare_transaction_data(data: dict, user_id: int) -> (dict, str | None):
 
 @error_handler
 def get_cyclical_transactions(budget_id: int):
+
     cyclical_expenses_stmt = (
         select(Transactions)
         .where(Transactions.budget_id == budget_id, Transactions.is_cyclical == True)

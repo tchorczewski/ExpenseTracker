@@ -32,6 +32,11 @@ def get_recent_operations(user):
 
 
 def get_curr_month_transactions(user_id):
+    """
+    Gets all transactions for user, in current month
+    :param user_id:
+    :return:
+    """
     budget_id = get_curr_month_budget_id(user_id)
     transaction_stmt = (
         select(
