@@ -4,17 +4,17 @@ info:
   description: API documentation for the ExpenseTracker backend.
   version: 1.0.0
 servers:
-  - url: http://localhost:5000/api
+  - url: http://localhost:5000
     description: Local dev server
 tags:
   - name: Auth
-  - name: Users
+  - name: Dashboard
   - name: Budgets
-  - name: Expenses
+  - name: Transactions
   - name: Tasks
 
 paths:
-  /auth/register:
+  /api/auth/register:
     post:
       tags: [Auth]
       summary: Register a new user
@@ -28,14 +28,16 @@ paths:
                 username: { type: string }
                 email: { type: string, format: email }
                 password: { type: string, format: password }
-              required: [username, email, password]
+                first_name: {type: string}
+                last_name: {type: string}
+              required: [username, email, password, first_name, last_name]
       responses:
         '201':
           description: User created
         '400':
           description: Validation error
 
-  /auth/login:
+  /api/auth/login:
     post:
       tags: [Auth]
       summary: Log in and receive JWT cookies
@@ -55,7 +57,7 @@ paths:
         '401':
           description: Invalid credentials
 
-  /auth/logout:
+  /api/auth/logout:
     post:
       tags: [Auth]
       summary: Log out (clear JWT cookies)
@@ -63,38 +65,29 @@ paths:
         '200':
           description: Logged out
 
-  /users/me:
+  /api/budgets/get_statuses:
     get:
-      tags: [Users]
-      summary: Get current user profile
+      tags: [Budgets]
+      summary: Get budget statuses from DB
       security:
         - cookieAuth: []
       responses:
         '200':
-          description: Current user info
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id: { type: integer }
-                  username: { type: string }
-                  email: { type: string }
-
-  /budgets:
+          description: List of statuses
+  /api/budgets/get_all_budgets:
     get:
       tags: [Budgets]
-      summary: List budgets
+      summary: Get all budgets for user
       security:
         - cookieAuth: []
       responses:
         '200':
           description: List of budgets
+
+  /api/budgets/create_budget:
     post:
       tags: [Budgets]
       summary: Create a new budget
-      security:
-        - cookieAuth: []
       requestBody:
         required: true
         content:
@@ -102,52 +95,85 @@ paths:
             schema:
               type: object
               properties:
-                name: { type: string }
-                limit: { type: number, format: float }
-              required: [name, limit]
+                user_id: { type: integer }
+                amount: {type: number, format: float}
+                budget_month: {type: integer}
+                budget_year: {type: integer}
+                status_id: {type: integer}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+              required: [budget_month, budget_year, amount]
       responses:
         '201':
           description: Budget created
 
-  /budgets/{budget_id}:
-    get:
+  /api/budgets/edit_budget:
+    patch:
       tags: [Budgets]
-      summary: Get budget by ID
-      parameters:
-        - in: path
-          name: budget_id
-          schema: { type: integer }
-          required: true
-      responses:
-        '200':
-          description: Budget details
-    delete:
-      tags: [Budgets]
-      summary: Delete budget
-      parameters:
-        - in: path
-          name: budget_id
-          schema: { type: integer }
-          required: true
-      responses:
-        '204':
-          description: Deleted
-
-  /expenses:
-    get:
-      tags: [Expenses]
       summary: List expenses
       parameters:
         - in: query
           name: budget_id
           schema: { type: integer }
           required: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: {type: integer}
+                budget_month: { type: integer }
+                budget_year: { type: integer }
+                status_id: {type: integer}
+                amount: {type: number, format: float}
+      responses:
+        '200':
+          description: Update successful
+  /api/budgets/<int:budget_id>/get_budget_details:
+    get:
+      tags: [ Budgets ]
+      summary: Get's all the transactions for given budget
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '200':
+          description: Dictionary of transaction types with list of transactions
+
+  /api/dashboard/get_last_transactions:
+    get:
+      tags: [ Budgets ]
+      summary: Gets 5 last transactions that happened for logged in user
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '200':
+          description: List of transactions
+
+  /api/dashboard/get_curr_expenses:
+    get:
+      tags: [ Dashboard ]
+      summary: Delivers data to plot function on frontend to plot expenses for current month
+      security:
+        - cookieAuth: [ ]
       responses:
         '200':
           description: List of expenses
+  /api/dashboard/get_curr_incomes:
+    get:
+      tags: [ Dashboard ]
+      summary: Delivers data to plot function on frontend to plot incomes for current month
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '200':
+          description: List of incomes
+
+  /api/transactions/add_transaction:
     post:
-      tags: [Expenses]
-      summary: Create a new expense
+      tags: [Transactions]
+      summary: Create new transaction
       requestBody:
         required: true
         content:
@@ -156,37 +182,71 @@ paths:
               type: object
               properties:
                 budget_id: { type: integer }
-                description: { type: string }
+                category_id: { type: integer }
                 amount: { type: number, format: float }
                 date: { type: string, format: date-time }
-              required: [budget_id, description, amount]
+                is_cyclical: { type: boolean }
+                type: {type: string}
+              required: [budget_id, category_id, amount, date, is_cyclical, type]
       responses:
         '201':
-          description: Expense created
+          description: Transaction created
 
-  /expenses/{expense_id}:
-    get:
-      tags: [Expenses]
-      summary: Get expense by ID
+  /api/transactions/edit_transaction:
+    patch:
+      tags: [Transactions]
+      summary: Edit transaction
       parameters:
-        - in: path
-          name: expense_id
+        - in: query
+          name: budget_id
           schema: { type: integer }
-          required: true
+          required: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: {type: integer}
+                category_id: { type: integer }
+                amount: { type: number, format: float}
+                date: {type: string, format: date-time}
+                is_cyclical: {type: boolean}
       responses:
         '200':
-          description: Expense details
+          description: Update successful
+  /api/transactions/delete_transaction:
     delete:
-      tags: [Expenses]
-      summary: Delete expense
+      tags: [Transactions]
+      summary: Delete transaction
       parameters:
         - in: path
-          name: expense_id
+          name: transaction_id
           schema: { type: integer }
           required: true
       responses:
         '204':
           description: Deleted
+  /api/transactions/get_categories:
+    get:
+      tags: [Transactions]
+      summary: Get transaction categories from DB
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of categories
+
+  /api/transactions/get_transactions:
+      get:
+        tags: [ Transactions ]
+        summary: Get transactions from DB
+        security:
+          - cookieAuth: [ ]
+        responses:
+          '200':
+            description: List of transactions
 
   /tasks/send-summary:
     post:
