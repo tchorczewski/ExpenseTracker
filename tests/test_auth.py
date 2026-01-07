@@ -1,6 +1,6 @@
 def test_login_successful(client):
     response = client.post(
-        "/api/auth/login", data={"login": "jason1234", "password": "jason1234!"}
+        "/api/auth/login", data={"login": "han1234", "password": "jason1234!"}
     )
     assert response.status_code == 200
 
@@ -23,11 +23,11 @@ def test_register_correct(client):
     response = client.post(
         "/api/auth/register",
         data={
-            "username": "test_user",
-            "email": "test.user@example.com",
+            "username": "example_user",
+            "email": "test_user@example.com",
             "first_name": "Test",
             "last_name": "User",
-            "password": "examplepassword1234",
+            "password": "examplepassword1234!",
         },
     )
     assert response.status_code == 201
