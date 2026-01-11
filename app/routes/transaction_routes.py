@@ -6,7 +6,7 @@ from datetime import datetime
 from app.common.decorators import error_handler
 from app.services.transactions_services import prepare_transaction_data
 from utils import validation
-from db.models import Users, Transactions, Categories
+from db.models import Transactions, Categories
 from db import db
 from app.services.auth_services import get_auth_user
 
@@ -23,7 +23,7 @@ def get_users_transactions():
     if error_response:
         return error_response, status_code
 
-    stmt = select(Transactions).where(Users.user_id == user.user_id)
+    stmt = select(Transactions).where(Transactions.user_id == user.id)
     transactions = db.session.execute(stmt).scalars().all()
 
     transactions_list = [
@@ -86,12 +86,15 @@ def edit_transaction():
 
     data = request.get_json()
 
-    is_valid, error_msg = validation.validate_operation_edit(data)
+    is_valid, error_msg = validation.validate_transaction_edit(data)
     if not is_valid:
         return jsonify({"message": error_msg}), 400
+
+    data["date"] = datetime.fromisoformat(data["date"])
+
     stmt = (
         update(Transactions)
-        .where(Transactions.id == data["id"], Transactions.user_id == user.user_id)
+        .where(Transactions.id == data["id"], Transactions.user_id == user.id)
         .values(**data, updated_at=datetime.now())
         .returning(Transactions)
     )

@@ -1,6 +1,6 @@
-def test_login_successful(client):
+def test_login_successful(client, test_user):
     response = client.post(
-        "/api/auth/login", data={"login": "han1234", "password": "jason1234!"}
+        "/api/auth/login", data={"login": "testuser", "password": "testpassword1!"}
     )
     assert response.status_code == 200
 
@@ -16,7 +16,7 @@ def test_login_unregistered_user(client):
     response = client.post(
         "/api/auth/login", data={"login": "faileduser", "password": "failedpassword"}
     )
-    assert response.status_code == 404
+    assert response.status_code == 401
 
 
 def test_register_correct(client):

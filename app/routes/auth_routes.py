@@ -14,7 +14,7 @@ def login_user():
     username = request.form["login"]
     password = request.form["password"]
     if username is None or password is None:
-        return {"message": "Missing username or password"}, 400
+        return {"message": "Missing username or password"}, 401
     message, status_code = log_in(username, password)
     return message, status_code
 

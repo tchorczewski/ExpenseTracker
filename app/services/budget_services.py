@@ -1,11 +1,9 @@
 from datetime import datetime
-
 from sqlalchemy import select, func
 from app.common.decorators import error_handler
 from db import db
-from db.models import Budgets, Users, Transactions
+from db.models import Budgets
 from utils.mappers import budget_mapper
-from utils.validation import is_valid_date
 
 
 @error_handler
@@ -36,7 +34,7 @@ def prepare_budget_data(data: dict, user_id: int):
     data["budget_month"] = int(data["budget_month"])
     data["budget_year"] = int(data["budget_year"])
     data["status_id"] = 3
-    data["created_at"] = datetime.now().strftime("%Y-%m-%d")
+    data["created_at"] = datetime.now()
     data["updated_at"] = None
     return data
 
@@ -55,3 +53,11 @@ def verify_budget_change(user_id, date, current_budgets_id):
     if current_budgets_id == edited_budget["budget_id"]:
         return False, None, None
     return True, edited_budget["budget_id"], None
+
+
+def check_if_budget_exists(budget_id: int):
+    stmt = select(Budgets).filter(Budgets.id == budget_id)
+    result = db.session.execute(stmt).scalar_one_or_none()
+    if not result:
+        return False
+    return True

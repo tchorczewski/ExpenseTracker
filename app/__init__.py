@@ -1,5 +1,5 @@
 from os import getenv
-from flask import Flask, url_for, redirect
+from flask import url_for, redirect
 from flask import Flask
 from flask_jwt_extended import (
     JWTManager,
@@ -22,9 +22,9 @@ from .routes.swagger import swagger_bp
 from .routes.ui_routes import main_bp
 
 
-def create_app():
+def create_app(config_object):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_object)
     app.permanent_session_lifetime = timedelta(days=1)
     jwt = JWTManager(app)
     db.init_app(app)

@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from app.services.budget_services import check_if_budget_exists
 
 
 def is_valid_email(email) -> bool:
@@ -88,6 +89,8 @@ def validate_transaction(data):
         return False, "Incorrect date format, should be YYYY-MM-DD"
     if not is_valid_type(data["type"]):
         return False, "Incorrect transaction type"
+    if not check_if_budget_exists(data["budget_id"]):
+        return False, "Budget does not exist"
 
     return True, None
 
@@ -112,14 +115,7 @@ def validate_budget(data):
 
 
 def validate_transaction_edit(data):
-    allowed_fields = [
-        "id",
-        "category_id",
-        "amount",
-        "description",
-        "date",
-        "is_cyclical",
-    ]
+    allowed_fields = ["id", "category_id", "amount", "date", "is_cyclical", "type"]
     errors = {}
     unknown_fields = [field for field in data if field not in allowed_fields]
     if unknown_fields:
@@ -128,7 +124,9 @@ def validate_transaction_edit(data):
     if "amount" in data:
         if not is_valid_amount(data["amount"]):
             errors["amount"] = "Incorrect value passed as amount"
-
+    if "type" in data:
+        if not is_valid_type(data["type"]):
+            errors["type"] = "Incorrect transaction type"
     if errors:
         return False, errors
     return True, errors
