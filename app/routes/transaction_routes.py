@@ -1,48 +1,41 @@
 import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
-from sqlalchemy import select, update, delete
+from sqlalchemy import delete
 from datetime import datetime
-from app.common.decorators import error_handler
-from app.services.transactions_services import prepare_transaction_data
+from app.common.decorators import error_handler, jwt_required_user
+from app.services.transactions_services import (
+    prepare_transaction_data,
+    fetch_categories,
+    push_edited_transaction,
+)
 from utils import validation
-from db.models import Transactions, Categories
+from db.models import Transactions
 from db import db
-from app.services.auth_services import get_auth_user
 
-from utils.mappers import category_mapper, transaction_mapper
+from utils.mappers import transaction_mapper
 
 transaction_bp = Blueprint("expenses", __name__)
+
+
+def trasaction_getter(user):
+    pass
 
 
 @transaction_bp.route("/get_transactions", methods=["GET"])
 @error_handler
 @jwt_required()
-def get_users_transactions():
-    user, error_response, status_code = get_auth_user()
-    if error_response:
-        return error_response, status_code
-
-    stmt = select(Transactions).where(Transactions.user_id == user.id)
-    transactions = db.session.execute(stmt).scalars().all()
-
-    transactions_list = [
-        transaction_mapper(transaction) for transaction in transactions
-    ]
-    types = {"income": [], "expense": []}
-    for t in transactions_list:
-        types[t["type"]].append(t)
+@jwt_required_user
+def get_users_transactions(user):
+    types = trasaction_getter(user)
     return jsonify(types), 200
 
 
 @transaction_bp.route("/add_transaction", methods=["POST"])
 @error_handler
 @jwt_required()
-def create_transaction():
-    user, error_response, status_code = get_auth_user()
-    if error_response:
-        return error_response, status_code
-
+@jwt_required_user
+def create_transaction(user):
     raw_data = request.get_json()
     is_valid, error_msg = validation.validate_transaction(raw_data)
     if not is_valid:
@@ -62,12 +55,9 @@ def create_transaction():
 @transaction_bp.route("/delete_transaction", methods=["DELETE"])
 @error_handler
 @jwt_required()
-def delete_transaction():
-    user, error_msg, status_code = get_auth_user()
-    if error_msg:
-        return error_msg, status_code
+@jwt_required_user
+def delete_transaction(user):
     data = request.get_json()
-
     stmt = delete(Transactions).where(
         Transactions.id == data["id"], Transactions.user_id == user.id
     )
@@ -79,27 +69,16 @@ def delete_transaction():
 @transaction_bp.route("/edit_transaction", methods=["PATCH"])
 @error_handler
 @jwt_required()
-def edit_transaction():
-    user, error_response, status_code = get_auth_user()
-    if error_response:
-        return error_response, status_code
-
+@jwt_required_user
+def edit_transaction(user):
     data = request.get_json()
-
     is_valid, error_msg = validation.validate_transaction_edit(data)
     if not is_valid:
         return jsonify({"message": error_msg}), 400
 
     data["date"] = datetime.fromisoformat(data["date"])
 
-    stmt = (
-        update(Transactions)
-        .where(Transactions.id == data["id"], Transactions.user_id == user.id)
-        .values(**data, updated_at=datetime.now())
-        .returning(Transactions)
-    )
-    updated_transaction = db.session.execute(stmt).scalar_one_or_none()
-    db.session.commit()
+    updated_transaction = push_edited_transaction(data, user)
 
     return transaction_mapper(updated_transaction), 200
 
@@ -107,14 +86,7 @@ def edit_transaction():
 @transaction_bp.route("/get_categories", methods=["GET"])
 @jwt_required()
 @error_handler
-def get_categories():
-    user, error_response, status_code = get_auth_user()
-    if error_response:
-        return error_response, status_code
-    stmt = select(Categories)
-    results = db.session.execute(stmt).scalars().all()
-    categories = {"income": [], "expense": []}
-    results_list = [category_mapper(row) for row in results]
-    for c in results_list:
-        categories[c["type"]].append({"id": c["id"], "name": c["name"]})
+@jwt_required_user
+def get_categories(user):
+    categories = fetch_categories()
     return jsonify(categories), 200

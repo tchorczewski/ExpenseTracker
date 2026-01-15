@@ -2,8 +2,6 @@ import bcrypt
 from flask_jwt_extended import get_jwt_identity, set_access_cookies, create_access_token
 from typing import Any
 from flask import jsonify, Response
-
-from app.common.decorators import error_handler
 from db import db
 from db.models import Users
 from utils.mappers import user_mapper
@@ -18,7 +16,6 @@ def _get_current_user(user_id: int):
     return user
 
 
-@error_handler
 def _get_user_id_from_token():
     """
     :return: Identity taken from JWT Token, in this case, user_id

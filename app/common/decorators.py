@@ -4,6 +4,8 @@ import traceback
 
 from flask import jsonify
 from functools import singledispatch
+
+from app.services.auth_services import get_auth_user
 from db import db
 from sqlalchemy.exc import OperationalError, IntegrityError
 
@@ -48,5 +50,16 @@ def error_handler(fn):
             return fn(*args, **kwargs)
         except Exception as e:
             return handle_error(e)
+
+    return wrapper
+
+
+def jwt_required_user(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        user, error_response, status_code = get_auth_user()
+        if error_response:
+            return error_response, status_code
+        return fn(user, *args, **kwargs)
 
     return wrapper

@@ -1,6 +1,8 @@
 import re
 from datetime import datetime
-from app.services.budget_services import check_if_budget_exists
+from sqlalchemy import select
+from db import db
+from db.models import Budgets
 
 
 def is_valid_email(email) -> bool:
@@ -66,7 +68,7 @@ def is_valid_type(transaction_type) -> bool:
     return transaction_type in ["expense", "income"]
 
 
-def validate_transaction(data):
+def validate_transaction(data) -> tuple[bool, str | None]:
     """
     Validate if passed data is going to create valid transaction
     :param data: Data from request
@@ -89,13 +91,13 @@ def validate_transaction(data):
         return False, "Incorrect date format, should be YYYY-MM-DD"
     if not is_valid_type(data["type"]):
         return False, "Incorrect transaction type"
-    if not check_if_budget_exists(data["budget_id"]):
+    if not validate_budget_existence(data["budget_id"]):
         return False, "Budget does not exist"
 
     return True, None
 
 
-def validate_budget(data):
+def validate_budget(data) -> tuple[bool, str | None]:
     """
     Takes the raw data from requests and checks for required fields that user has to fill and verifies the integrity of the data.
     :param data: Raw data from the API request
@@ -114,7 +116,7 @@ def validate_budget(data):
     return True, None
 
 
-def validate_transaction_edit(data):
+def validate_transaction_edit(data) -> tuple[bool, dict]:
     allowed_fields = ["id", "category_id", "amount", "date", "is_cyclical", "type"]
     errors = {}
     unknown_fields = [field for field in data if field not in allowed_fields]
@@ -132,7 +134,7 @@ def validate_transaction_edit(data):
     return True, errors
 
 
-def validate_budget_edit(data):
+def validate_budget_edit(data) -> tuple[bool, dict]:
     editable_fields = {"id", "status_id", "amount", "budget_year", "budget_month"}
     errors = {}
 
@@ -154,7 +156,7 @@ def validate_budget_edit(data):
     return True, {}
 
 
-def validate_register(data):
+def validate_register(data) -> tuple[bool, dict]:
     errors = {}
     required_fields = ["username", "first_name", "last_name", "email", "password"]
     for field in data:
@@ -170,3 +172,11 @@ def validate_register(data):
     if errors:
         return False, errors
     return True, {}
+
+
+def validate_budget_existence(budget_id: int) -> bool:
+    stmt = select(Budgets).filter(Budgets.id == budget_id)
+    result = db.session.execute(stmt).scalar_one_or_none()
+    if not result:
+        return False
+    return True

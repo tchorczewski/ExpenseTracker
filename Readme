@@ -64,3 +64,7 @@ API Documentation:
 Swagger UI is available at:
 {BASE_URL}/swagger
 
+What I'd work on next:
+To improve scalability, I would step away from using raw data from DB and convert everything into objects, making it easier to manage internal states.
+I would add a role based authentication, allowing for more modular design. This would also open doors for bigger customization options for users.
+To minimize risk of performance issues, I'd employ pagination and asynchronous database calls with e.g celery.
