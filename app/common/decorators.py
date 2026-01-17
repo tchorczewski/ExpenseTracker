@@ -5,6 +5,8 @@ import traceback
 from flask import jsonify
 from functools import singledispatch
 
+from flask_jwt_extended.exceptions import NoAuthorizationError
+
 from app.services.auth_services import get_auth_user
 from db import db
 from sqlalchemy.exc import OperationalError, IntegrityError
@@ -24,6 +26,11 @@ def handle_error(exc: Exception):
     db.session.rollback()
     logger.error(f"Unexpected error: {traceback.format_exc()}")
     return jsonify({"error": f"Internal server error {exc}"}), 500
+
+
+@handle_error.register(NoAuthorizationError)
+def _(exc: NoAuthorizationError):
+    return jsonify({"error": f"No authorization error {exc}"}), 401
 
 
 @handle_error.register(ValueError)
