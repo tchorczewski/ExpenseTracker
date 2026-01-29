@@ -8,9 +8,8 @@ from flask_jwt_extended import (
     get_jwt_identity,
     set_access_cookies,
 )
-from . import celery_app
+
 from db import db
-from .celery_app import celery_init_app
 from .config import Config
 from datetime import timedelta, datetime
 from .routes.auth_routes import auth_bp
@@ -18,8 +17,8 @@ from .routes.budget_routes import budget_bp
 from .routes.dashboard_routes import dashboard_bp
 from .routes.transaction_routes import transaction_bp
 from .routes.swagger import swagger_bp
-
 from .routes.ui_routes import main_bp
+from app.extensions import celery
 
 
 def create_app(config_object):
@@ -28,7 +27,16 @@ def create_app(config_object):
     app.permanent_session_lifetime = timedelta(days=1)
     jwt = JWTManager(app)
     db.init_app(app)
-    celery = celery_init_app(app)
+    celery.conf.update(app.config["CELERY"])
+    celery.set_current()
+    app.extensions["celery"] = celery
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
     with app.app_context():
         db.create_all()
     app.register_blueprint(main_bp)

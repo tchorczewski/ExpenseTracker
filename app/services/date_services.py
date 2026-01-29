@@ -12,14 +12,5 @@ def get_previous_month() -> tuple:
     return previous_year, previous_month
 
 
-def parse_date(year: int, month: int) -> str:
-    """
-    :param year: Int value for year
-    :param month: Int value for month
-    :return: date in format YYYY-MM
-    """
-    return f"{year}-{int(month):02d}"
-
-
 def set_next_month(date: datetime):
     return (date + relativedelta(months=1)).strftime("%Y-%m-%d")

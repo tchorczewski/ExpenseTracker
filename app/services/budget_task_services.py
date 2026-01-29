@@ -23,7 +23,7 @@ def get_users_with_missing_budget() -> dict[str, str] | set[Any]:
         Budgets.budget_month == current_month, Budgets.budget_year == current_year
     )
 
-    missing_budget_users_stmt = select(func.distinct(Users.user_id)).filter(
+    missing_budget_users_stmt = select(func.distinct(Budgets.user_id)).filter(
         Budgets.budget_year == previous_year,
         Budgets.budget_month == previous_month,
         not_(Budgets.user_id.in_(current_month_subq)),

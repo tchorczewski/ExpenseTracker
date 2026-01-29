@@ -18,8 +18,8 @@ class Config:
     JWT_CSRF_IN_COOKIES = False
     JWT_COOKIE_CSRF_PROTECT = False
     CELERY = dict(
-        broker_url=os.getenv("BROKER_URL", "redis://redis:6379/0"),
-        result_backend=os.getenv("RESULT_BACKEND", "redis://redis:6379/0"),
+        broker_url=os.getenv("BROKER_URL", "redis://localhost:6379/0"),
+        result_backend=os.getenv("RESULT_BACKEND", "redis://localhost:6379/0"),
         task_ignore_result=True,
         task_always_eager=True,
         task_eager_propagates=True,
@@ -27,7 +27,7 @@ class Config:
         beat_schedule={
             "create_monthly_budget": {
                 "task": "app.tasks.budget_tasks.create_next_month_budget",
-                "schedule": crontab(hour=15, minute=33, day_of_month=14),
+                "schedule": crontab(hour=00, minute=29, day_of_month=30),
             }
         },
     )
