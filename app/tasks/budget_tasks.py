@@ -17,11 +17,11 @@ def create_next_month_budget():
     previous_year, previous_month = get_previous_month()
     data = []
     for user in user_ids:
-        budget, _ = get_budget_for_user(user, previous_year, previous_month)
-        transactions = get_cyclical_data(budget.budget_id)
-        budget_amount = calculate_budget_amount(transactions)
-        prepared_budget = clone_budget(budget, budget_amount)
-        data.append(prepared_budget)
-        data.extend(clone_transactions(budget.budget_id, transactions))
-
-    push_data(data)
+        budget, _ = get_budget_for_user(user, month=previous_month, year=previous_year)
+        if budget:
+            transactions = get_cyclical_data(budget.id)
+            budget_amount = calculate_budget_amount(transactions)
+            prepared_budget = clone_budget(budget, budget_amount)
+            data.append(prepared_budget)
+            data.extend(clone_transactions(prepared_budget.id, transactions))
+    return push_data(data)

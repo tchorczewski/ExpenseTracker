@@ -259,7 +259,8 @@ function viewDetails(id, month, year) {
       budget_month: parseInt(document.getElementById("addBudgetMonth").value),
       budget_year: parseInt(document.getElementById("addBudgetYear").value),
       amount: parseFloat(document.getElementById("addBudgetAmount").value),
-      status_id: parseInt(addStatusSelect.value)
+      status_id: parseInt(addStatusSelect.value),
+      is_generated: false
     };
 
     const res = await fetch("/api/budgets/create_budget", {

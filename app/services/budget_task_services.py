@@ -5,6 +5,7 @@ from sqlalchemy import select, func, not_
 from sqlalchemy.inspection import inspect
 
 from app.common.decorators import error_handler
+from app.services.budget_services import get_budget_for_user
 from app.services.transactions_services import get_cyclical_transactions
 from db import db
 from app.services.date_services import get_previous_month, set_next_month
@@ -50,36 +51,42 @@ def calculate_budget_amount(transactions: list[Transactions]) -> float:
     """
     incomes = expenses = 0
     for t in transactions:
-        if t["type"] == "income":
-            incomes += t["amount"]
+        if t.type == "income":
+            incomes += t.amount
         else:
-            expenses += t["amount"]
+            expenses += t.amount
 
     return incomes - expenses
 
 
 def clone_budget(
-    budget: Budgets, budget_amount: float, exclude_fields=("budget_id", "updated_at")
+    budget: Budgets,
+    budget_amount: float,
 ) -> Budgets:
     if budget_amount == 0:
-        budget_amount = budget.budget_amount
+        budget_amount = budget.amount
     mapper = inspect(Budgets)
     data = {
         column.key: getattr(budget, column.key)
         for column in mapper.column_attrs
-        if column.key not in exclude_fields
+        if column.key not in ("id", "updated_at")
     }
-    data["budget_amount"] = budget_amount
+    data["amount"] = budget_amount
     data["budget_year"] = datetime.now().year
     data["budget_month"] = datetime.now().month
-    return Budgets(**data)
+    new_budget = Budgets(**data)
+    db.session.add(new_budget)
+    db.session.flush()
+    return new_budget
 
 
 @error_handler
 def push_data(data: list[Budgets | Transactions]) -> bool:
-    db.session.add_all(data)
-    db.session.commit()
-    return True
+    if data:
+        db.session.add_all(data)
+        db.session.commit()
+        return True
+    return False
 
 
 def clone_transactions(
@@ -95,7 +102,7 @@ def clone_transactions(
                     for column in inspect(Transactions).column_attrs
                     if column.key not in exclude_fields
                 },
-                "budget_id": budget_id,
+                "id": budget_id,
                 "date": set_next_month(transaction.date),
             }
         )

@@ -24,7 +24,7 @@ budget_bp = Blueprint("budget", __name__)
 @jwt_required()
 @jwt_required_user
 @error_handler
-def get_statuses():
+def get_statuses(user):
     user, error_response, status_code = get_auth_user()
     if error_response:
         return error_response, status_code
