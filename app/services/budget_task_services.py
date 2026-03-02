@@ -5,11 +5,10 @@ from sqlalchemy import select, func, not_
 from sqlalchemy.inspection import inspect
 
 from app.common.decorators import error_handler
-from app.services.budget_services import get_budget_for_user
 from app.services.transactions_services import get_cyclical_transactions
 from db import db
 from app.services.date_services import get_previous_month, set_next_month
-from db.models import Budgets, Users, Transactions
+from db.models import Budgets, Transactions
 
 
 @error_handler
@@ -20,8 +19,12 @@ def get_users_with_missing_budget() -> dict[str, str] | set[Any]:
     """
     previous_year, previous_month = get_previous_month()
     current_year, current_month = datetime.now().year, datetime.now().month
-    current_month_subq = select(Budgets.user_id).filter(
-        Budgets.budget_month == current_month, Budgets.budget_year == current_year
+    current_month_subq = (
+        select(Budgets.user_id)
+        .filter(
+            Budgets.budget_month == current_month, Budgets.budget_year == current_year
+        )
+        .correlate(None)
     )
 
     missing_budget_users_stmt = select(func.distinct(Budgets.user_id)).filter(
@@ -92,7 +95,7 @@ def push_data(data: list[Budgets | Transactions]) -> bool:
 def clone_transactions(
     budget_id: int,
     transactions: list[Transactions],
-    exclude_fields=("budget_id", "updated_at"),
+    exclude_fields=("id,budget_id", "updated_at"),
 ):
     cloned = [
         Transactions(
@@ -102,7 +105,7 @@ def clone_transactions(
                     for column in inspect(Transactions).column_attrs
                     if column.key not in exclude_fields
                 },
-                "id": budget_id,
+                "budget_id": budget_id,
                 "date": set_next_month(transaction.date),
             }
         )

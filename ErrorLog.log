@@ -1,0 +1,246 @@
+02/03/2026 22:57:54  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+02/03/2026 22:57:54  [33mPress CTRL+C to quit[0m
+02/03/2026 22:57:54   * Restarting with stat
+02/03/2026 22:57:55   * Debugger is active!
+02/03/2026 22:57:55   * Debugger PIN: 101-905-456
+02/03/2026 23:04:20  127.0.0.1 - - [02/Mar/2026 23:04:20] "[32mGET / HTTP/1.1[0m" 302 -
+02/03/2026 23:04:21  127.0.0.1 - - [02/Mar/2026 23:04:21] "GET /login HTTP/1.1" 200 -
+02/03/2026 23:04:21  127.0.0.1 - - [02/Mar/2026 23:04:21] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+02/03/2026 23:04:22  127.0.0.1 - - [02/Mar/2026 23:04:22] "POST /api/auth/login HTTP/1.1" 200 -
+02/03/2026 23:04:22  127.0.0.1 - - [02/Mar/2026 23:04:22] "GET / HTTP/1.1" 200 -
+02/03/2026 23:04:23  Unexpected error: Traceback (most recent call last):
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\common\decorators.py", line 57, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\.venv\Lib\site-packages\flask_jwt_extended\view_decorators.py", line 170, in decorator
+    return current_app.ensure_sync(fn)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\common\decorators.py", line 70, in wrapper
+    return fn(user, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\routes\dashboard_routes.py", line 29, in plot_expenses
+    data = get_curr_month_transactions(user.id)["expense"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\services\dashboard_services.py", line 57, in get_curr_month_transactions
+    result[t["type"]].append(
+    ~~~~~~^^^^^^^^^^^
+KeyError: None
+
+02/03/2026 23:04:23  127.0.0.1 - - [02/Mar/2026 23:04:23] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 500 -
+02/03/2026 23:04:23  Unexpected error: Traceback (most recent call last):
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\common\decorators.py", line 57, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\.venv\Lib\site-packages\flask_jwt_extended\view_decorators.py", line 170, in decorator
+    return current_app.ensure_sync(fn)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\common\decorators.py", line 70, in wrapper
+    return fn(user, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\routes\dashboard_routes.py", line 38, in plot_incomes
+    data = get_curr_month_transactions(user.id)["income"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\services\dashboard_services.py", line 57, in get_curr_month_transactions
+    result[t["type"]].append(
+    ~~~~~~^^^^^^^^^^^
+KeyError: None
+
+02/03/2026 23:04:23  127.0.0.1 - - [02/Mar/2026 23:04:23] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 500 -
+02/03/2026 23:04:23  127.0.0.1 - - [02/Mar/2026 23:04:23] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:04:33  127.0.0.1 - - [02/Mar/2026 23:04:33] "GET / HTTP/1.1" 200 -
+02/03/2026 23:04:34  Unexpected error: Traceback (most recent call last):
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\common\decorators.py", line 57, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\.venv\Lib\site-packages\flask_jwt_extended\view_decorators.py", line 170, in decorator
+    return current_app.ensure_sync(fn)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\common\decorators.py", line 70, in wrapper
+    return fn(user, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\routes\dashboard_routes.py", line 29, in plot_expenses
+    data = get_curr_month_transactions(user.id)["expense"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\services\dashboard_services.py", line 57, in get_curr_month_transactions
+    result[t["type"]].append(
+    ~~~~~~^^^^^^^^^^^
+KeyError: None
+
+02/03/2026 23:04:34  127.0.0.1 - - [02/Mar/2026 23:04:34] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 500 -
+02/03/2026 23:04:34  127.0.0.1 - - [02/Mar/2026 23:04:34] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:04:34  Unexpected error: Traceback (most recent call last):
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\common\decorators.py", line 57, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\.venv\Lib\site-packages\flask_jwt_extended\view_decorators.py", line 170, in decorator
+    return current_app.ensure_sync(fn)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\common\decorators.py", line 70, in wrapper
+    return fn(user, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\routes\dashboard_routes.py", line 38, in plot_incomes
+    data = get_curr_month_transactions(user.id)["income"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tchor\expense_tracker\ExpenseTracker\app\services\dashboard_services.py", line 57, in get_curr_month_transactions
+    result[t["type"]].append(
+    ~~~~~~^^^^^^^^^^^
+KeyError: None
+
+02/03/2026 23:04:34  127.0.0.1 - - [02/Mar/2026 23:04:34] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 500 -
+02/03/2026 23:05:25  127.0.0.1 - - [02/Mar/2026 23:05:25] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:05:34  127.0.0.1 - - [02/Mar/2026 23:05:34] "[35m[1mPOST /api/budgets/create_budget HTTP/1.1[0m" 201 -
+02/03/2026 23:05:35  127.0.0.1 - - [02/Mar/2026 23:05:35] "GET / HTTP/1.1" 200 -
+02/03/2026 23:05:36  127.0.0.1 - - [02/Mar/2026 23:05:36] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 201 -
+02/03/2026 23:05:36  127.0.0.1 - - [02/Mar/2026 23:05:36] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 201 -
+02/03/2026 23:05:36  127.0.0.1 - - [02/Mar/2026 23:05:36] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:05:39  127.0.0.1 - - [02/Mar/2026 23:05:39] "GET /budgets HTTP/1.1" 200 -
+02/03/2026 23:05:39  127.0.0.1 - - [02/Mar/2026 23:05:39] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:05:39  127.0.0.1 - - [02/Mar/2026 23:05:39] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:05:46  127.0.0.1 - - [02/Mar/2026 23:05:46] "GET /operations?budget_id=5&month=1&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:05:46  127.0.0.1 - - [02/Mar/2026 23:05:46] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:05:46  127.0.0.1 - - [02/Mar/2026 23:05:46] "GET /api/budgets/5/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:05:50  127.0.0.1 - - [02/Mar/2026 23:05:50] "GET /budgets HTTP/1.1" 200 -
+02/03/2026 23:05:50  127.0.0.1 - - [02/Mar/2026 23:05:50] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:05:50  127.0.0.1 - - [02/Mar/2026 23:05:50] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:05:57  127.0.0.1 - - [02/Mar/2026 23:05:57] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:06:00  127.0.0.1 - - [02/Mar/2026 23:06:00] "PATCH /api/budgets/edit_budget HTTP/1.1" 200 -
+02/03/2026 23:06:01  127.0.0.1 - - [02/Mar/2026 23:06:01] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:06:17  127.0.0.1 - - [02/Mar/2026 23:06:17] "GET / HTTP/1.1" 200 -
+02/03/2026 23:06:18  127.0.0.1 - - [02/Mar/2026 23:06:18] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 201 -
+02/03/2026 23:06:18  127.0.0.1 - - [02/Mar/2026 23:06:18] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 201 -
+02/03/2026 23:06:18  127.0.0.1 - - [02/Mar/2026 23:06:18] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:06:19  127.0.0.1 - - [02/Mar/2026 23:06:19] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:06:24  127.0.0.1 - - [02/Mar/2026 23:06:24] "GET /budgets HTTP/1.1" 200 -
+02/03/2026 23:06:25  127.0.0.1 - - [02/Mar/2026 23:06:25] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:06:25  127.0.0.1 - - [02/Mar/2026 23:06:25] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:06:31  127.0.0.1 - - [02/Mar/2026 23:06:31] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:06:33  127.0.0.1 - - [02/Mar/2026 23:06:33] "PATCH /api/budgets/edit_budget HTTP/1.1" 200 -
+02/03/2026 23:06:34  127.0.0.1 - - [02/Mar/2026 23:06:34] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:06:36  127.0.0.1 - - [02/Mar/2026 23:06:36] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:06:38  127.0.0.1 - - [02/Mar/2026 23:06:38] "PATCH /api/budgets/edit_budget HTTP/1.1" 200 -
+02/03/2026 23:06:39  127.0.0.1 - - [02/Mar/2026 23:06:39] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:21:34  127.0.0.1 - - [02/Mar/2026 23:21:34] "GET /operations?budget_id=12&month=3&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:21:34  127.0.0.1 - - [02/Mar/2026 23:21:34] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:21:34  127.0.0.1 - - [02/Mar/2026 23:21:34] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:21:36  127.0.0.1 - - [02/Mar/2026 23:21:36] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:21:50  127.0.0.1 - - [02/Mar/2026 23:21:50] "[35m[1mPOST /api/transactions/add_transaction HTTP/1.1[0m" 201 -
+02/03/2026 23:21:50  127.0.0.1 - - [02/Mar/2026 23:21:50] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:21:54  127.0.0.1 - - [02/Mar/2026 23:21:54] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:22:03  127.0.0.1 - - [02/Mar/2026 23:22:03] "[35m[1mPOST /api/transactions/add_transaction HTTP/1.1[0m" 201 -
+02/03/2026 23:22:03  127.0.0.1 - - [02/Mar/2026 23:22:03] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:22:06  127.0.0.1 - - [02/Mar/2026 23:22:06] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:22:17  127.0.0.1 - - [02/Mar/2026 23:22:17] "[35m[1mPOST /api/transactions/add_transaction HTTP/1.1[0m" 201 -
+02/03/2026 23:22:17  127.0.0.1 - - [02/Mar/2026 23:22:17] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:22:18  127.0.0.1 - - [02/Mar/2026 23:22:18] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:22:32  127.0.0.1 - - [02/Mar/2026 23:22:32] "[35m[1mPOST /api/transactions/add_transaction HTTP/1.1[0m" 201 -
+02/03/2026 23:22:32  127.0.0.1 - - [02/Mar/2026 23:22:32] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:22:34  127.0.0.1 - - [02/Mar/2026 23:22:34] "GET / HTTP/1.1" 200 -
+02/03/2026 23:22:35  127.0.0.1 - - [02/Mar/2026 23:22:35] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 201 -
+02/03/2026 23:22:35  127.0.0.1 - - [02/Mar/2026 23:22:35] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 201 -
+02/03/2026 23:22:35  127.0.0.1 - - [02/Mar/2026 23:22:35] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:27:25   * Detected change in 'C:\\Users\\tchor\\expense_tracker\\ExpenseTracker\\app\\services\\dashboard_services.py', reloading
+02/03/2026 23:27:25   * Restarting with stat
+02/03/2026 23:27:26   * Debugger is active!
+02/03/2026 23:27:26   * Debugger PIN: 101-905-456
+02/03/2026 23:27:30  127.0.0.1 - - [02/Mar/2026 23:27:30] "GET / HTTP/1.1" 200 -
+02/03/2026 23:27:31  127.0.0.1 - - [02/Mar/2026 23:27:31] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 201 -
+02/03/2026 23:27:31  127.0.0.1 - - [02/Mar/2026 23:27:31] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:27:31  127.0.0.1 - - [02/Mar/2026 23:27:31] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 201 -
+02/03/2026 23:27:32  127.0.0.1 - - [02/Mar/2026 23:27:32] "GET / HTTP/1.1" 200 -
+02/03/2026 23:27:32  127.0.0.1 - - [02/Mar/2026 23:27:32] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 201 -
+02/03/2026 23:27:32  127.0.0.1 - - [02/Mar/2026 23:27:32] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 201 -
+02/03/2026 23:27:32  127.0.0.1 - - [02/Mar/2026 23:27:32] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:27:44  127.0.0.1 - - [02/Mar/2026 23:27:44] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:27:46  127.0.0.1 - - [02/Mar/2026 23:27:46] "GET /budgets HTTP/1.1" 200 -
+02/03/2026 23:27:46  127.0.0.1 - - [02/Mar/2026 23:27:46] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:27:46  127.0.0.1 - - [02/Mar/2026 23:27:46] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:27:48  127.0.0.1 - - [02/Mar/2026 23:27:48] "GET /operations?budget_id=5&month=1&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:27:48  127.0.0.1 - - [02/Mar/2026 23:27:48] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:27:48  127.0.0.1 - - [02/Mar/2026 23:27:48] "GET /api/budgets/5/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:27:52  127.0.0.1 - - [02/Mar/2026 23:27:52] "GET /budgets HTTP/1.1" 200 -
+02/03/2026 23:27:52  127.0.0.1 - - [02/Mar/2026 23:27:52] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:27:52  127.0.0.1 - - [02/Mar/2026 23:27:52] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:27:55  127.0.0.1 - - [02/Mar/2026 23:27:55] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:27:57  127.0.0.1 - - [02/Mar/2026 23:27:57] "GET /operations?budget_id=12&month=3&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:27:57  127.0.0.1 - - [02/Mar/2026 23:27:57] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:27:57  127.0.0.1 - - [02/Mar/2026 23:27:57] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:28:04  127.0.0.1 - - [02/Mar/2026 23:28:04] "DELETE /api/transactions/delete_transaction HTTP/1.1" 200 -
+02/03/2026 23:28:04  127.0.0.1 - - [02/Mar/2026 23:28:04] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:28:06  127.0.0.1 - - [02/Mar/2026 23:28:06] "DELETE /api/transactions/delete_transaction HTTP/1.1" 200 -
+02/03/2026 23:28:06  127.0.0.1 - - [02/Mar/2026 23:28:06] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:28:08  127.0.0.1 - - [02/Mar/2026 23:28:08] "DELETE /api/transactions/delete_transaction HTTP/1.1" 200 -
+02/03/2026 23:28:08  127.0.0.1 - - [02/Mar/2026 23:28:08] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:28:10  127.0.0.1 - - [02/Mar/2026 23:28:10] "DELETE /api/transactions/delete_transaction HTTP/1.1" 200 -
+02/03/2026 23:28:10  127.0.0.1 - - [02/Mar/2026 23:28:10] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:28:11  127.0.0.1 - - [02/Mar/2026 23:28:11] "GET /budgets HTTP/1.1" 200 -
+02/03/2026 23:28:11  127.0.0.1 - - [02/Mar/2026 23:28:11] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:28:11  127.0.0.1 - - [02/Mar/2026 23:28:11] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:28:12  127.0.0.1 - - [02/Mar/2026 23:28:12] "GET / HTTP/1.1" 200 -
+02/03/2026 23:28:13  127.0.0.1 - - [02/Mar/2026 23:28:13] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:28:13  127.0.0.1 - - [02/Mar/2026 23:28:13] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 201 -
+02/03/2026 23:28:13  127.0.0.1 - - [02/Mar/2026 23:28:13] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 201 -
+02/03/2026 23:28:24  127.0.0.1 - - [02/Mar/2026 23:28:24] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:29:50  127.0.0.1 - - [02/Mar/2026 23:29:50] "GET /budgets HTTP/1.1" 200 -
+02/03/2026 23:29:50  127.0.0.1 - - [02/Mar/2026 23:29:50] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:29:50  127.0.0.1 - - [02/Mar/2026 23:29:50] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:29:55  127.0.0.1 - - [02/Mar/2026 23:29:55] "GET /operations?budget_id=12&month=3&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:29:59  127.0.0.1 - - [02/Mar/2026 23:29:59] "GET /operations?budget_id=12&month=3&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:30:10  127.0.0.1 - - [02/Mar/2026 23:30:10] "GET /operations?budget_id=12&month=3&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:30:10  127.0.0.1 - - [02/Mar/2026 23:30:10] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:30:10  127.0.0.1 - - [02/Mar/2026 23:30:10] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:30:11  127.0.0.1 - - [02/Mar/2026 23:30:11] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:30:12  127.0.0.1 - - [02/Mar/2026 23:30:12] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:40:08  127.0.0.1 - - [02/Mar/2026 23:40:08] "GET /operations?budget_id=12&month=3&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:40:08  127.0.0.1 - - [02/Mar/2026 23:40:08] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:40:08  127.0.0.1 - - [02/Mar/2026 23:40:08] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:40:15  127.0.0.1 - - [02/Mar/2026 23:40:15] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:40:19  127.0.0.1 - - [02/Mar/2026 23:40:19] "[35m[1mPOST /api/transactions/add_transaction HTTP/1.1[0m" 201 -
+02/03/2026 23:40:19  127.0.0.1 - - [02/Mar/2026 23:40:19] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:40:21  127.0.0.1 - - [02/Mar/2026 23:40:21] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:40:27  127.0.0.1 - - [02/Mar/2026 23:40:27] "[32mGET /operations HTTP/1.1[0m" 302 -
+02/03/2026 23:40:27  127.0.0.1 - - [02/Mar/2026 23:40:27] "GET / HTTP/1.1" 200 -
+02/03/2026 23:40:28  127.0.0.1 - - [02/Mar/2026 23:40:28] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 201 -
+02/03/2026 23:40:28  127.0.0.1 - - [02/Mar/2026 23:40:28] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 201 -
+02/03/2026 23:40:28  127.0.0.1 - - [02/Mar/2026 23:40:28] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:41:25  127.0.0.1 - - [02/Mar/2026 23:41:25] "GET /budgets HTTP/1.1" 200 -
+02/03/2026 23:41:25  127.0.0.1 - - [02/Mar/2026 23:41:25] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:41:25  127.0.0.1 - - [02/Mar/2026 23:41:25] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:41:29  127.0.0.1 - - [02/Mar/2026 23:41:29] "GET /operations?budget_id=12&month=3&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:41:29  127.0.0.1 - - [02/Mar/2026 23:41:29] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:41:29  127.0.0.1 - - [02/Mar/2026 23:41:29] "GET /api/budgets/12/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:41:30  127.0.0.1 - - [02/Mar/2026 23:41:30] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:41:34  127.0.0.1 - - [02/Mar/2026 23:41:34] "[32mGET /operations HTTP/1.1[0m" 302 -
+02/03/2026 23:41:34  127.0.0.1 - - [02/Mar/2026 23:41:34] "GET / HTTP/1.1" 200 -
+02/03/2026 23:41:35  127.0.0.1 - - [02/Mar/2026 23:41:35] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:41:35  127.0.0.1 - - [02/Mar/2026 23:41:35] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 201 -
+02/03/2026 23:41:35  127.0.0.1 - - [02/Mar/2026 23:41:35] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 201 -
+02/03/2026 23:45:24  127.0.0.1 - - [02/Mar/2026 23:45:24] "GET / HTTP/1.1" 200 -
+02/03/2026 23:45:25  127.0.0.1 - - [02/Mar/2026 23:45:25] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 201 -
+02/03/2026 23:45:25  127.0.0.1 - - [02/Mar/2026 23:45:25] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 201 -
+02/03/2026 23:45:25  127.0.0.1 - - [02/Mar/2026 23:45:25] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -
+02/03/2026 23:45:26  127.0.0.1 - - [02/Mar/2026 23:45:26] "GET /budgets HTTP/1.1" 200 -
+02/03/2026 23:45:26  127.0.0.1 - - [02/Mar/2026 23:45:26] "GET /api/budgets/get_statuses HTTP/1.1" 200 -
+02/03/2026 23:45:26  127.0.0.1 - - [02/Mar/2026 23:45:26] "GET /api/budgets/get_all_budgets HTTP/1.1" 200 -
+02/03/2026 23:45:28  127.0.0.1 - - [02/Mar/2026 23:45:28] "GET /operations?budget_id=5&month=1&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:45:28  127.0.0.1 - - [02/Mar/2026 23:45:28] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:45:28  127.0.0.1 - - [02/Mar/2026 23:45:28] "GET /api/budgets/5/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:45:30  127.0.0.1 - - [02/Mar/2026 23:45:30] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:45:37  127.0.0.1 - - [02/Mar/2026 23:45:37] "[33mPUT /api/transactions/update_transaction HTTP/1.1[0m" 404 -
+02/03/2026 23:46:03  127.0.0.1 - - [02/Mar/2026 23:46:03] "[33mPUT /api/transactions/update_transaction HTTP/1.1[0m" 404 -
+02/03/2026 23:46:07  127.0.0.1 - - [02/Mar/2026 23:46:07] "GET /operations?budget_id=5&month=1&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:46:07  127.0.0.1 - - [02/Mar/2026 23:46:07] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:46:07  127.0.0.1 - - [02/Mar/2026 23:46:07] "GET /api/budgets/5/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:46:09  127.0.0.1 - - [02/Mar/2026 23:46:09] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:46:14  127.0.0.1 - - [02/Mar/2026 23:46:14] "[31m[1mPUT /api/transactions/edit_transaction HTTP/1.1[0m" 405 -
+02/03/2026 23:46:28  127.0.0.1 - - [02/Mar/2026 23:46:28] "[31m[1mPUT /api/transactions/edit_transaction HTTP/1.1[0m" 405 -
+02/03/2026 23:46:31  127.0.0.1 - - [02/Mar/2026 23:46:31] "GET /operations?budget_id=5&month=1&year=2026 HTTP/1.1" 200 -
+02/03/2026 23:46:31  127.0.0.1 - - [02/Mar/2026 23:46:31] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:46:31  127.0.0.1 - - [02/Mar/2026 23:46:31] "GET /api/budgets/5/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:46:31  127.0.0.1 - - [02/Mar/2026 23:46:31] "GET /api/transactions/get_categories HTTP/1.1" 200 -
+02/03/2026 23:46:36  127.0.0.1 - - [02/Mar/2026 23:46:36] "PATCH /api/transactions/edit_transaction HTTP/1.1" 200 -
+02/03/2026 23:46:36  127.0.0.1 - - [02/Mar/2026 23:46:36] "GET /api/budgets/5/get_budget_details HTTP/1.1" 200 -
+02/03/2026 23:46:46  127.0.0.1 - - [02/Mar/2026 23:46:46] "GET / HTTP/1.1" 200 -
+02/03/2026 23:46:46  127.0.0.1 - - [02/Mar/2026 23:46:46] "[35m[1mGET /api/dashboard/get_curr_expenses HTTP/1.1[0m" 201 -
+02/03/2026 23:46:46  127.0.0.1 - - [02/Mar/2026 23:46:46] "[35m[1mGET /api/dashboard/get_curr_incomes HTTP/1.1[0m" 201 -
+02/03/2026 23:46:46  127.0.0.1 - - [02/Mar/2026 23:46:46] "[35m[1mGET /api/dashboard/get_last_transactions HTTP/1.1[0m" 201 -

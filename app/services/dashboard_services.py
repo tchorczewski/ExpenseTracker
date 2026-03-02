@@ -54,10 +54,10 @@ def get_curr_month_transactions(user_id):
     result = {"income": [], "expense": []}
     if transactions:
         for t in transactions:
-            result[t["type"]].append(
+            if t is not None:
+                result[t["type"]].append(
                 {"Category": t["category"], "Amount": float(t["total"])}
             )
-
     return result
 
 

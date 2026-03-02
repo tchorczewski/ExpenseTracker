@@ -299,7 +299,6 @@ async function loadBudgetDetails() {
   dataCache.income = payload.income ?? [];
   renderTable();
 }
-
 /* --- ADD flow --- */
 addBtn.addEventListener('click', async () => {
   await fetchAllTransactionCategories();
@@ -335,6 +334,65 @@ addForm.addEventListener('submit', async e => {
     await loadBudgetDetails();
   } else {
     alert('Failed to add');
+  }
+});
+
+
+/* --- EDIT flow --- */
+// call from the “Edit” buttons: onclick="onEdit(${id}, '${type}')"
+window.onEdit = async (id, type) => {
+  // find the record in the cached list
+  const list = dataCache[type] || [];
+  const item = list.find(x => String(x.id) === String(id));
+  if (!item) {
+    alert('Could not find record to edit');
+    return;
+  }
+
+  // refresh category lists in case they’ve changed
+  await fetchAllTransactionCategories();
+  currentEditType = type;          // remember for submit handler
+
+  // populate modal fields
+  editId.value       = id;
+  editAmount.value   = item.amount ?? '';
+  editDate.value     = (item.date || item.created_at || '').split('T')[0];
+  editCyclical.checked =
+    item.is_cyclical === true || item.is_cyclical === 'true';
+
+  const catId = item.category_id ?? item.category_id;
+  fillSelect(editCategory, categories[type], catId);
+
+  document.getElementById('editModalLabel').textContent = `Edit ${type}`;
+  editModal.show();
+};
+
+let currentEditType = null;
+
+editForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const type = currentEditType || (opsToggle.checked ? 'expense' : 'income');
+  const res = await fetch('/api/transactions/edit_transaction', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: JSON.stringify({
+      id: Number(editId.value),
+      type,
+      amount: parseFloat(editAmount.value),
+      category_id: parseInt(editCategory.value),
+      date: editDate.value,
+      is_cyclical: Boolean(editCyclical.checked)
+    })
+  });
+
+  if (res.ok) {
+    editModal.hide();
+    await loadBudgetDetails();
+  } else {
+    alert('Update failed');
   }
 });
 
